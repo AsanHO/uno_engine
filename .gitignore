@@ -1,0 +1,21 @@
+# Visual Studio
+.vs/
+*.VC.db
+*.VC.opendb
+*.ipch
+
+# Build results
+x64/
+x86/
+Debug/
+Release/
+
+# CMake
+out/
+
+# User files
+*.user
+*.suo
+
+# Temporary
+*.log
