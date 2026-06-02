@@ -48,7 +48,7 @@ tuple<vector<Vertex>, vector<uint16_t>> MakeBox() {
     positions.push_back(Vector3(-1.0f, 1.0f, -1.0f) * scale);
     positions.push_back(Vector3(1.0f, 1.0f, -1.0f) * scale);
     positions.push_back(Vector3(1.0f, -1.0f, -1.0f) * scale);
-    colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
+    colors.push_back(Vector3(1.0f, 0.0f, 1.0f));
     colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
     colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
     colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
@@ -172,6 +172,7 @@ bool ExampleApp::Initialize() {
 void ExampleApp::Update(float dt) {
 
     static float rot = 0.0f;
+    cout << rot << endl;
     rot += dt;
 
     // 모델의 변환
