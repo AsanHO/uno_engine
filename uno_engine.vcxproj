@@ -132,11 +132,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ExampleApp.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="AppBase.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="ExampleApp.h" />
     <ClInclude Include="AppBase.h" />
   </ItemGroup>

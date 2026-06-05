@@ -9,6 +9,7 @@
 #include <vector>
 #include <windows.h>
 #include <wrl.h> // ComPtr
+#include "Camera.h"
 
 namespace hlab {
 
@@ -123,6 +124,8 @@ class AppBase {
     ComPtr<ID3D11DepthStencilView> m_depthStencilView;
     ComPtr<ID3D11DepthStencilState> m_depthStencilState;
 
+    //카메라 클래스
+    Camera m_camera;
     D3D11_VIEWPORT m_screenViewport;
 };
 } // namespace hlab
