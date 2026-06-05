@@ -48,7 +48,7 @@ tuple<vector<Vertex>, vector<uint16_t>> MakeBox() {
     positions.push_back(Vector3(-1.0f, 1.0f, -1.0f) * scale);
     positions.push_back(Vector3(1.0f, 1.0f, -1.0f) * scale);
     positions.push_back(Vector3(1.0f, -1.0f, -1.0f) * scale);
-    colors.push_back(Vector3(1.0f, 0.0f, 1.0f));
+    colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
     colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
     colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
     colors.push_back(Vector3(0.0f, 0.0f, 1.0f));
@@ -172,7 +172,7 @@ bool ExampleApp::Initialize() {
 void ExampleApp::Update(float dt) {
 
     static float rot = 0.0f;
-    cout << rot << endl;
+   
     rot += dt;
 
     // 모델의 변환
@@ -182,7 +182,7 @@ void ExampleApp::Update(float dt) {
 
     using namespace DirectX;
 
-    // 시점 변환
+    // 시점 변환 todo:: 카메라 클래스 만들기
     m_constantBufferData.view =
         XMMatrixLookAtLH({0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f});
     m_constantBufferData.view = m_constantBufferData.view.Transpose();

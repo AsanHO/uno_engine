@@ -122,16 +122,16 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         break;
     case WM_MOUSEMOVE:
-        // cout << "Mouse " << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
+         cout << "Mouse " << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
         break;
     case WM_LBUTTONUP:
-        // cout << "WM_LBUTTONUP Left mouse button" << endl;
+         cout << "WM_LBUTTONUP Left mouse button" << endl;
         break;
     case WM_RBUTTONUP:
-        // cout << "WM_RBUTTONUP Right mouse button" << endl;
+         cout << "WM_RBUTTONUP Right mouse button" << endl;
         break;
     case WM_KEYDOWN:
-        // cout << "WM_KEYDOWN " << (int)wParam << endl;
+         cout << "WM_KEYDOWN " << (int)wParam << endl;
         break;
     case WM_DESTROY:
         ::PostQuitMessage(0);
