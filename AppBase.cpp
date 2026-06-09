@@ -2,7 +2,7 @@
 // https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes
 
 #include "AppBase.h"
-
+#include <algorithm>
 #include <dxgi.h>    // DXGIFactory
 #include <dxgi1_4.h> // DXGIFactory4
 
@@ -107,7 +107,22 @@ bool AppBase::Initialize() {
 
     return true;
 }
+void AppBase::OnMouseMove(WPARAM btnState, int mouseX, int mouseY) {
 
+    // 마우스 커서의 위치를 NDC로 변환
+    // 마우스 커서는 좌측 상단 (0, 0), 우측 하단(width-1, height-1)
+    // NDC는 좌측 하단이 (-1, -1), 우측 상단(1, 1)
+    float x = mouseX * 2.0f / m_screenWidth - 1.0f;
+    float y = -mouseY * 2.0f / m_screenHeight + 1.0f;
+
+    // 커서가 화면 밖으로 나갔을 경우 범위 조절
+    // 게임에서는 클램프를 안할 수도 있습니다.
+    x = std::clamp(x, -1.0f, 1.0f);
+    y = std::clamp(y, -1.0f, 1.0f);
+
+    // 카메라 시점 회전
+    m_camera.UpdateMouse(x, y);
+}
 LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
@@ -122,21 +137,22 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             return 0;
         break;
     case WM_MOUSEMOVE:
-         cout << "Mouse " << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
+        cout << "Mouse " << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
+        OnMouseMove(wParam, LOWORD(lParam), HIWORD(lParam));
         break;
     case WM_LBUTTONUP:
-         cout << "WM_LBUTTONUP Left mouse button" << endl;
+        cout << "WM_LBUTTONUP Left mouse button" << endl;
         break;
     case WM_RBUTTONUP:
-         cout << "WM_RBUTTONUP Right mouse button" << endl;
+        cout << "WM_RBUTTONUP Right mouse button" << endl;
         break;
     case WM_KEYDOWN:
-         cout << "WM_KEYDOWN " << (int)wParam << endl;
+        cout << "WM_KEYDOWN " << (int)wParam << endl;
         m_keyPressed[wParam] = true;
-         if (wParam == 27) {
-             // ESC 키가 눌렸을 때 프로그램 종료
-             DestroyWindow(hwnd);
-         }
+        if (wParam == 27) {
+            // ESC 키가 눌렸을 때 프로그램 종료
+            DestroyWindow(hwnd);
+        }
         break;
     case WM_KEYUP:
         // 키보드가 눌린 상태인지 아닌지 저장
@@ -209,7 +225,7 @@ bool AppBase::InitDirect3D() {
     // 만약 그래픽스 카드 호환성 문제로 D3D11CreateDevice()가 실패하는 경우에는
     // D3D_DRIVER_TYPE_HARDWARE 대신 D3D_DRIVER_TYPE_WARP 사용해보세요
     // const D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_WARP; //CPU를 사용하겠다.
-    // ***************1. GPU(Device) 생성 
+    // ***************1. GPU(Device) 생성
     const D3D_DRIVER_TYPE driverType = D3D_DRIVER_TYPE_HARDWARE; // 실제 GPU를 사용하겠다.
 
     // 여기서 생성하는 것들
@@ -218,7 +234,6 @@ bool AppBase::InitDirect3D() {
 
     // m_device와 m_context 생성
 
-    
     UINT createDeviceFlags = 0;
     // 디버그를 사용할껀지 확인
 #if defined(DEBUG) || defined(_DEBUG)
@@ -374,7 +389,7 @@ bool AppBase::InitDirect3D() {
 
     // CreateRenderTarget
     ID3D11Texture2D *pBackBuffer;
-    m_swapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)); //0번째 버퍼를 pBack에 저장
+    m_swapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)); // 0번째 버퍼를 pBack에 저장
     if (pBackBuffer) {
         m_device->CreateRenderTargetView(pBackBuffer, NULL, &m_renderTargetView);
         pBackBuffer->Release(); // GetBuffer에서 AddRef가 발생하기 때문에 릴리즈
@@ -399,7 +414,7 @@ bool AppBase::InitDirect3D() {
     D3D11_RASTERIZER_DESC rastDesc;
     ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC)); // Need this
     rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-     //rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
+    // rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
     rastDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
     rastDesc.FrontCounterClockwise = true;
 

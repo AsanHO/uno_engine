@@ -38,7 +38,7 @@ class AppBase {
     // Convenience overrides for handling mouse input.
     virtual void OnMouseDown(WPARAM btnState, int x, int y){};
     virtual void OnMouseUp(WPARAM btnState, int x, int y){};
-    virtual void OnMouseMove(WPARAM btnState, int x, int y){};
+    virtual void OnMouseMove(WPARAM btnState, int x, int y);
 
   protected: // 상속 받은 클래스에서도 접근 가능
     bool InitMainWindow();

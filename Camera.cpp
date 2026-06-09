@@ -21,15 +21,15 @@ Vector3 Camera::GetEyePos() { return m_position; }
 void Camera::UpdateMouse(float mouseNdcX, float mouseNdcY) {
     // 얼마나 회전할지 계산
     // https://en.wikipedia.org/wiki/Aircraft_principal_axes
-    // m_yaw = mouseNdcX * DirectX::XM_2PI;      // 좌우 360도
-    // m_pitch = mouseNdcY * DirectX::XM_PIDIV2; // 위 아래 90도
+     m_yaw = mouseNdcX * DirectX::XM_2PI;      // 좌우 360도
+     m_pitch = mouseNdcY * DirectX::XM_PIDIV2; // 위 아래 90도
 
     //// 이동할 때 기준이 되는 정면/오른쪽 방향 계산
 
     //// TODO:
-    // m_viewDir = Vector3::Transform(Vector3(0.0f, 0.0f, 1.0f), Matrix::CreateRotationY(m_yaw));
-    //// m_yaw만큼 회전
-    // m_rightDir = m_upDir.Cross(m_viewDir); // Cross product 사용
+     m_viewDir = Vector3::Transform(Vector3(0.0f, 0.0f, 1.0f), Matrix::CreateRotationY(m_yaw));
+    // m_yaw만큼 회전
+     m_rightDir = m_upDir.Cross(m_viewDir); // Cross product 사용
 }
 
 void Camera::MoveForward(float dt) {
