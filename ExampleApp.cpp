@@ -174,6 +174,8 @@ void ExampleApp::Update(float dt) {
     static float rot = 0.0f;
    
     rot += dt;
+    if (m_keyPressed[16])
+        dt *= 5;
     if (m_keyPressed[87])
         m_camera.MoveForward(dt);
     if (m_keyPressed[83])
@@ -182,8 +184,7 @@ void ExampleApp::Update(float dt) {
         m_camera.MoveRight(dt);
     if (m_keyPressed[65])
         m_camera.MoveRight(-dt);
-    Vector3 curPos = m_camera.GetEyePos();
-    cout << curPos.x << " " << curPos.y << " " << curPos.z << endl;
+    
     // 모델의 변환
     m_constantBufferData.model = Matrix::CreateScale(0.5f) * Matrix::CreateRotationY(rot) *
                                  Matrix::CreateTranslation(Vector3(0.0f, -0.3f, 1.0f));
