@@ -13,7 +13,7 @@ tuple<vector<Vertex>, vector<uint16_t>> MakeBox() {
     vector<Vector3> colors;
     vector<Vector3> normals;
 
-    const float scale = 1.0f;
+    const float scale = 0.5f;
 
     // 윗면
     positions.push_back(Vector3(-1.0f, 1.0f, -1.0f) * scale);
@@ -170,11 +170,20 @@ bool ExampleApp::Initialize() {
 }
 
 void ExampleApp::Update(float dt) {
-
+    //dt는 이전 프레임과 다음 프레임의 시간차
     static float rot = 0.0f;
    
     rot += dt;
-
+    if (m_keyPressed[87])
+        m_camera.MoveForward(dt);
+    if (m_keyPressed[83])
+        m_camera.MoveForward(-dt);
+    if (m_keyPressed[68])
+        m_camera.MoveRight(dt);
+    if (m_keyPressed[65])
+        m_camera.MoveRight(-dt);
+    Vector3 curPos = m_camera.GetEyePos();
+    cout << curPos.x << " " << curPos.y << " " << curPos.z << endl;
     // 모델의 변환
     m_constantBufferData.model = Matrix::CreateScale(0.5f) * Matrix::CreateRotationY(rot) *
                                  Matrix::CreateTranslation(Vector3(0.0f, -0.3f, 1.0f));
@@ -183,8 +192,7 @@ void ExampleApp::Update(float dt) {
     using namespace DirectX;
 
     // 시점 변환 todo:: 카메라 클래스 만들기
-    m_constantBufferData.view =
-        XMMatrixLookAtLH({0.0f, 0.0f, -1.0f}, {0.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f});
+    m_constantBufferData.view = m_camera.GetViewRow();
     m_constantBufferData.view = m_constantBufferData.view.Transpose();
 
     // 프로젝션

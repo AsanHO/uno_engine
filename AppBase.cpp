@@ -132,6 +132,15 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
     case WM_KEYDOWN:
          cout << "WM_KEYDOWN " << (int)wParam << endl;
+        m_keyPressed[wParam] = true;
+         if (wParam == 27) {
+             // ESC 키가 눌렸을 때 프로그램 종료
+             DestroyWindow(hwnd);
+         }
+        break;
+    case WM_KEYUP:
+        // 키보드가 눌린 상태인지 아닌지 저장
+        m_keyPressed[wParam] = false;
         break;
     case WM_DESTROY:
         ::PostQuitMessage(0);

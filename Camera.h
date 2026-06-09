@@ -28,7 +28,7 @@ class Camera {
     // m_upDir : 위쪽 방향, 중력의 반대방향이 기본
     // m_rightDir : 오른쪽 방향, eyeDir과 upDir로부터 계산
 
-    Vector3 m_position = Vector3(0.0f, 0.15f, 0.0f); // 0.15f는 눈높이 정도
+    Vector3 m_position = Vector3(0.0f, 0.0f, 0.0f); // 0.15f는 눈높이 정도
     Vector3 m_viewDir = Vector3(0.0f, 0.0f, 1.0f);
     Vector3 m_upDir = Vector3(0.0f, 1.0f, 0.0f); // 이번 예제에서는 고정
     Vector3 m_rightDir = Vector3(1.0f, 0.0f, 0.0f);
@@ -38,7 +38,7 @@ class Camera {
     float m_pitch = 0.0f;
     float m_yaw = 0.0f;
 
-    float m_speed = 1.0f; // 움직이는 속도
+    float m_speed = 3.0f; // 움직이는 속도
 
     // 프로젝션 옵션도 카메라 클래스로 이동
     float m_projFovAngleY = 70.0f;
