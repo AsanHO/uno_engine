@@ -107,22 +107,7 @@ bool AppBase::Initialize() {
 
     return true;
 }
-void AppBase::OnMouseMove(WPARAM btnState, int mouseX, int mouseY) {
 
-    // 마우스 커서의 위치를 NDC로 변환
-    // 마우스 커서는 좌측 상단 (0, 0), 우측 하단(width-1, height-1)
-    // NDC는 좌측 하단이 (-1, -1), 우측 상단(1, 1)
-    float x = mouseX * 2.0f / m_screenWidth - 1.0f;
-    float y = -mouseY * 2.0f / m_screenHeight + 1.0f;
-
-    // 커서가 화면 밖으로 나갔을 경우 범위 조절
-    // 게임에서는 클램프를 안할 수도 있습니다.
-    x = std::clamp(x, -1.0f, 1.0f);
-    y = std::clamp(y, -1.0f, 1.0f);
-
-    // 카메라 시점 회전
-    m_camera.UpdateMouse(x, y);
-}
 LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
@@ -136,10 +121,33 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
             return 0;
         break;
-    case WM_MOUSEMOVE:
+    /*case WM_MOUSEMOVE:
         cout << "Mouse " << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
         OnMouseMove(wParam, LOWORD(lParam), HIWORD(lParam));
+        break;*/
+    case WM_INPUT: {
+        UINT dataSize = 0;
+
+        GetRawInputData((HRAWINPUT)lParam, RID_INPUT, nullptr, &dataSize, sizeof(RAWINPUTHEADER));
+
+        std::vector<BYTE> buffer(dataSize);
+
+        if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, buffer.data(), &dataSize,
+                            sizeof(RAWINPUTHEADER)) != dataSize) {
+            break;
+        }
+
+        RAWINPUT *raw = reinterpret_cast<RAWINPUT *>(buffer.data());
+
+        if (raw->header.dwType == RIM_TYPEMOUSE) {
+            LONG dx = raw->data.mouse.lLastX;
+            LONG dy = raw->data.mouse.lLastY;
+            cout << dx << " " << dy << endl;
+            m_camera.UpdateMouse(static_cast<float>(dx), static_cast<float>(dy));
+        }
+
         break;
+    }
     case WM_LBUTTONUP:
         cout << "WM_LBUTTONUP Left mouse button" << endl;
         break;
@@ -214,7 +222,12 @@ bool AppBase::InitMainWindow() {
 
     ShowWindow(m_mainWindow, SW_SHOWDEFAULT);
     UpdateWindow(m_mainWindow);
+    rid.usUsagePage = 0x01;
+    rid.usUsage = 0x02; // Mouse
+    rid.dwFlags = 0;
+    rid.hwndTarget = m_hwnd;
 
+    RegisterRawInputDevices(&rid, 1, sizeof(rid));
     return true;
 }
 

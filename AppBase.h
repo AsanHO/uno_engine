@@ -38,7 +38,7 @@ class AppBase {
     // Convenience overrides for handling mouse input.
     virtual void OnMouseDown(WPARAM btnState, int x, int y){};
     virtual void OnMouseUp(WPARAM btnState, int x, int y){};
-    virtual void OnMouseMove(WPARAM btnState, int x, int y);
+    /*virtual void OnMouseMove(WPARAM btnState, int x, int y);*/
 
   protected: // 상속 받은 클래스에서도 접근 가능
     bool InitMainWindow();
@@ -127,7 +127,8 @@ class AppBase {
     //카메라 클래스
     Camera m_camera;
     D3D11_VIEWPORT m_screenViewport;
-
+    RAWINPUTDEVICE rid;
+    HWND m_hwnd;
     // 현재 키보드가 눌렸는지 상태를 저장하는 배열
     bool m_keyPressed[256] = {
         false,

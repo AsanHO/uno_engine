@@ -18,11 +18,13 @@ Matrix Camera::GetViewRow() {
 
 Vector3 Camera::GetEyePos() { return m_position; }
 
-void Camera::UpdateMouse(float mouseNdcX, float mouseNdcY) {
+void Camera::UpdateMouse(float deltaX, float deltaY) {
     // 얼마나 회전할지 계산
     // https://en.wikipedia.org/wiki/Aircraft_principal_axes
-     m_yaw = mouseNdcX * DirectX::XM_2PI;      // 좌우 360도
-     m_pitch = mouseNdcY * DirectX::XM_PIDIV2; // 위 아래 90도
+
+    const float sensitivity = 0.003f; //마우스 감도
+     m_yaw += deltaX * sensitivity;      // 좌우 360도
+     m_pitch -= deltaY * sensitivity; // 위 아래 90도
 
     //// 이동할 때 기준이 되는 정면/오른쪽 방향 계산
 
