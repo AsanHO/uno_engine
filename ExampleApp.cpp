@@ -170,9 +170,9 @@ bool ExampleApp::Initialize() {
 }
 
 void ExampleApp::Update(float dt) {
-    //dt는 이전 프레임과 다음 프레임의 시간차
+    // dt는 이전 프레임과 다음 프레임의 시간차
     static float rot = 0.0f;
-   
+
     rot += dt;
     if (m_keyPressed[16])
         dt *= 5;
@@ -184,7 +184,7 @@ void ExampleApp::Update(float dt) {
         m_camera.MoveRight(dt);
     if (m_keyPressed[65])
         m_camera.MoveRight(-dt);
-    
+
     // 모델의 변환
     m_constantBufferData.model = Matrix::CreateScale(0.5f) * Matrix::CreateRotationY(rot) *
                                  Matrix::CreateTranslation(Vector3(0.0f, -0.3f, 1.0f));
@@ -193,11 +193,10 @@ void ExampleApp::Update(float dt) {
     using namespace DirectX;
 
     // 시점 변환 todo:: 카메라 클래스 만들기
-    m_constantBufferData.view = m_camera.GetViewRow();
-    m_constantBufferData.view = m_constantBufferData.view.Transpose();
+    m_constantBufferData.view = m_camera.GetViewRow().Transpose();
 
     // 프로젝션
-    const float aspect = AppBase::GetAspectRatio();
+    /*const float aspect = AppBase::GetAspectRatio();
     if (m_usePerspectiveProjection) {
         const float fovAngleY = 70.0f * XM_PI / 180.0f;
         m_constantBufferData.projection =
@@ -205,8 +204,8 @@ void ExampleApp::Update(float dt) {
     } else {
         m_constantBufferData.projection =
             XMMatrixOrthographicOffCenterLH(-aspect, aspect, -1.0f, 1.0f, 0.1f, 10.0f);
-    }
-    m_constantBufferData.projection = m_constantBufferData.projection.Transpose();
+    }*/
+    m_constantBufferData.projection = m_camera.GetProjRow().Transpose();
 
     // Constant를 CPU에서 GPU로 복사
     AppBase::UpdateBuffer(m_constantBufferData, m_constantBuffer);

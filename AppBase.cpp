@@ -28,7 +28,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
 // 생성자
 AppBase::AppBase()
-    : m_screenWidth(1280), m_screenHeight(960), m_mainWindow(0),
+    : m_screenWidth(1280), m_screenHeight(720), m_mainWindow(0),
       m_screenViewport(D3D11_VIEWPORT()) {
 
     g_appBase = this;
