@@ -13,6 +13,7 @@ struct Vertex {
     Vector3 normalModel;
     Vector2 texcoord;
     Vector3 tangentModel;
+    Vector3 color; // 임시로 넣음 todo:: 삭제 및 수정 필요
     // Vector3 biTangentModel;
     //  biTangent는 쉐이더에서 계산
 };

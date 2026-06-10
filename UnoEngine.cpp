@@ -7,7 +7,7 @@ namespace hlab {
 
 using namespace std;
 
-tuple<vector<Vertex>, vector<uint16_t>> MakeBox() {
+tuple<vector<Vertex>, vector<uint32_t>> MakeBox() {
 
     vector<Vector3> positions;
     vector<Vector3> colors;
@@ -107,7 +107,7 @@ tuple<vector<Vertex>, vector<uint16_t>> MakeBox() {
         vertices.push_back(v);
     }
 
-    vector<uint16_t> indices = {
+    vector<uint32_t> indices = {
         0,  1,  2,  0,  2,  3,  // 윗면
         4,  5,  6,  4,  6,  7,  // 아랫면
         8,  9,  10, 8,  10, 11, // 앞면
@@ -125,17 +125,20 @@ bool UnoEngine::Initialize() {
 
     if (!EngineBase::Initialize())
         return false;
-
+   /* m_cubeMapping.Initialize(m_device, L"../Assets/Textures/Cubemaps/HDRI/indoorEnvHDR.dds",
+                             L"../Assets/Textures/Cubemaps/HDRI/indoorSpecularHDR.dds",
+                             L"../Assets/Textures/Cubemaps/HDRI/indoorDiffuseHDR.dds",
+                             L"../Assets/Textures/Cubemaps/HDRI/indoorBrdf.dds");*/
     // Geometry 정의
     auto [vertices, indices] = MakeBox();
 
     // 버텍스 버퍼 만들기
-    EngineBase::CreateVertexBuffer(vertices, m_vertexBuffer);
+    D3D11Utils::CreateVertexBuffer(m_device,vertices, m_vertexBuffer);
 
     // 인덱스 버퍼 만들기
     m_indexCount = UINT(indices.size());
 
-    EngineBase::CreateIndexBuffer(indices, m_indexBuffer);
+    D3D11Utils::CreateIndexBuffer(m_device, indices, m_indexBuffer);
 
     // ConstantBuffer 만들기
     m_constantBufferData.model = Matrix();
@@ -161,10 +164,10 @@ bool UnoEngine::Initialize() {
         {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 4 * 3, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
-    EngineBase::CreateVertexShaderAndInputLayout(L"ColorVertexShader.hlsl", inputElements,
+    D3D11Utils::CreateVertexShaderAndInputLayout(m_device,L"ColorVertexShader.hlsl", inputElements,
                                               m_colorVertexShader, m_colorInputLayout);
 
-    EngineBase::CreatePixelShader(L"ColorPixelShader.hlsl", m_colorPixelShader);
+    D3D11Utils::CreatePixelShader(m_device,L"ColorPixelShader.hlsl", m_colorPixelShader);
 
     return true;
 }
@@ -208,7 +211,7 @@ void UnoEngine::Update(float dt) {
     m_constantBufferData.projection = m_camera.GetProjRow().Transpose();
 
     // Constant를 CPU에서 GPU로 복사
-    EngineBase::UpdateBuffer(m_constantBufferData, m_constantBuffer);
+    D3D11Utils::UpdateBuffer(m_device,m_context,m_constantBufferData, m_constantBuffer);
 }
 
 void UnoEngine::Render() {

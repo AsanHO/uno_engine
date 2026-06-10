@@ -510,54 +510,42 @@ bool EngineBase::InitGUI() {
 // 확장자 cso는 Compiled Shader Object를 의미합니다.
 // 여기서는 쉐이더 파일을 읽어들여서 컴파일합니다.
 
-void CheckResult(HRESULT hr, ID3DBlob *errorBlob) {
-    if (FAILED(hr)) {
-        // 파일이 없을 경우
-        if ((hr & D3D11_ERROR_FILE_NOT_FOUND) != 0) {
-            cout << "File not found." << endl;
-        }
 
-        // 에러 메시지가 있으면 출력
-        if (errorBlob) {
-            cout << "Shader compile error\n" << (char *)errorBlob->GetBufferPointer() << endl;
-        }
-    }
-}
 
-void EngineBase::CreateVertexShaderAndInputLayout(
-    const wstring &filename, const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,
-    ComPtr<ID3D11VertexShader> &vertexShader, ComPtr<ID3D11InputLayout> &inputLayout) {
-
-    ComPtr<ID3DBlob> shaderBlob;
-    ComPtr<ID3DBlob> errorBlob;
-
-    // 주의: 쉐이더의 시작점의 이름이 "main"인 함수로 지정
-    HRESULT hr =
-        D3DCompileFromFile(filename.c_str(), 0, 0, "main", "vs_5_0", 0, 0, &shaderBlob, &errorBlob);
-
-    CheckResult(hr, errorBlob.Get());
-
-    m_device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
-                                 &vertexShader);
-
-    m_device->CreateInputLayout(inputElements.data(), UINT(inputElements.size()),
-                                shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(),
-                                &inputLayout);
-}
-
-void EngineBase::CreatePixelShader(const wstring &filename, ComPtr<ID3D11PixelShader> &pixelShader) {
-    ComPtr<ID3DBlob> shaderBlob;
-    ComPtr<ID3DBlob> errorBlob;
-
-    // 주의: 쉐이더의 시작점의 이름이 "main"인 함수로 지정
-    HRESULT hr =
-        D3DCompileFromFile(filename.c_str(), 0, 0, "main", "ps_5_0", 0, 0, &shaderBlob, &errorBlob);
-
-    CheckResult(hr, errorBlob.Get());
-
-    m_device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
-                                &pixelShader);
-}
+//void EngineBase::CreateVertexShaderAndInputLayout(
+//    const wstring &filename, const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,
+//    ComPtr<ID3D11VertexShader> &vertexShader, ComPtr<ID3D11InputLayout> &inputLayout) {
+//
+//    ComPtr<ID3DBlob> shaderBlob;
+//    ComPtr<ID3DBlob> errorBlob;
+//
+//    // 주의: 쉐이더의 시작점의 이름이 "main"인 함수로 지정
+//    HRESULT hr =
+//        D3DCompileFromFile(filename.c_str(), 0, 0, "main", "vs_5_0", 0, 0, &shaderBlob, &errorBlob);
+//
+//    CheckResult(hr, errorBlob.Get());
+//
+//    m_device->CreateVertexShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
+//                                 &vertexShader);
+//
+//    m_device->CreateInputLayout(inputElements.data(), UINT(inputElements.size()),
+//                                shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(),
+//                                &inputLayout);
+//}
+//
+//void EngineBase::CreatePixelShader(const wstring &filename, ComPtr<ID3D11PixelShader> &pixelShader) {
+//    ComPtr<ID3DBlob> shaderBlob;
+//    ComPtr<ID3DBlob> errorBlob;
+//
+//    // 주의: 쉐이더의 시작점의 이름이 "main"인 함수로 지정
+//    HRESULT hr =
+//        D3DCompileFromFile(filename.c_str(), 0, 0, "main", "ps_5_0", 0, 0, &shaderBlob, &errorBlob);
+//
+//    CheckResult(hr, errorBlob.Get());
+//
+//    m_device->CreatePixelShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
+//                                &pixelShader);
+//}
 
 void EngineBase::CreateIndexBuffer(const std::vector<uint16_t> &indices,
                                 ComPtr<ID3D11Buffer> &m_indexBuffer) {
