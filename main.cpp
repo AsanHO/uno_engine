@@ -2,7 +2,7 @@
 #include <memory>
 #include <windows.h>
 
-#include "ExampleApp.h"
+#include "UnoEngine.h"
 
 using namespace std;
 
@@ -10,12 +10,12 @@ using namespace std;
 // 콘솔창이 있으면 디버깅에 편리합니다.
 // 디버깅할 때 애매한 값들을 cout으로 출력해서 확인해보세요.
 int main() {
-    hlab::UnoEngine exampleApp;
+    hlab::UnoEngine unoEngine;
 
-    if (!exampleApp.Initialize()) {
+    if (!unoEngine.Initialize()) {
         cout << "Initialization failed." << endl;
         return -1;
     }
 
-    return exampleApp.Run();
+    return unoEngine.Run();
 } //main 함수가 0으로 리턴되면 정상종료

@@ -1,7 +1,7 @@
 ﻿// 참고: 헤더 include 순서
 // https://google.github.io/styleguide/cppguide.html#Names_and_Order_of_Includes
 
-#include "AppBase.h"
+#include "EngineBase.h"
 #include <algorithm>
 #include <dxgi.h>    // DXGIFactory
 #include <dxgi1_4.h> // DXGIFactory4
