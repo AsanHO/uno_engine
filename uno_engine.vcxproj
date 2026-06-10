@@ -133,14 +133,20 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="D3D11Utils.h" />
     <ClCompile Include="UnoEngine.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="EngineBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="CubeMapping.h" />
+    <ClInclude Include="GeometryGenerator.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Mesh.h" />
     <ClInclude Include="UnoEngine.h" />
     <ClInclude Include="EngineBase.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ColorPixelShader.hlsl">
