@@ -17,7 +17,7 @@ using namespace std;
 
 // RegisterClassEx()에서 멤버 함수를 직접 등록할 수가 없기 때문에
 // 클래스의 멤버 함수에서 간접적으로 메시지를 처리할 수 있도록 도와줍니다.
-AppBase *g_appBase = nullptr;
+EngineBase *g_appBase = nullptr;
 
 // RegisterClassEx()에서 실제로 등록될 콜백 함수
 LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -27,14 +27,14 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 }
 
 // 생성자
-AppBase::AppBase()
+EngineBase::EngineBase()
     : m_screenWidth(1280), m_screenHeight(720), m_mainWindow(0),
       m_screenViewport(D3D11_VIEWPORT()) {
 
     g_appBase = this;
 }
 
-AppBase::~AppBase() {
+EngineBase::~EngineBase() {
     g_appBase = nullptr;
 
     // Cleanup
@@ -53,9 +53,9 @@ AppBase::~AppBase() {
     // 예시: m_d3dDevice.Reset(); 생략
 }
 
-float AppBase::GetAspectRatio() const { return float(m_screenWidth) / m_screenHeight; }
+float EngineBase::GetAspectRatio() const { return float(m_screenWidth) / m_screenHeight; }
 
-int AppBase::Run() {
+int EngineBase::Run() {
 
     // Main message loop
     MSG msg = {0};
@@ -94,7 +94,7 @@ int AppBase::Run() {
     return 0;
 }
 
-bool AppBase::Initialize() {
+bool EngineBase::Initialize() {
 
     if (!InitMainWindow())
         return false;
@@ -108,7 +108,7 @@ bool AppBase::Initialize() {
     return true;
 }
 
-LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+LRESULT EngineBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     if (ImGui_ImplWin32_WndProcHandler(hwnd, msg, wParam, lParam))
         return true;
@@ -174,7 +174,7 @@ LRESULT AppBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     return ::DefWindowProc(hwnd, msg, wParam, lParam);
 }
 
-bool AppBase::InitMainWindow() {
+bool EngineBase::InitMainWindow() {
 
     WNDCLASSEX wc = {sizeof(WNDCLASSEX),
                      CS_CLASSDC,
@@ -231,7 +231,7 @@ bool AppBase::InitMainWindow() {
     return true;
 }
 
-bool AppBase::InitDirect3D() {
+bool EngineBase::InitDirect3D() {
 
     // 이 예제는 Intel 내장 그래픽스 칩으로 실행을 확인하였습니다.
     // (LG 그램, 17Z90n, Intel Iris Plus Graphics)
@@ -477,7 +477,7 @@ bool AppBase::InitDirect3D() {
     return true;
 }
 
-bool AppBase::InitGUI() {
+bool EngineBase::InitGUI() {
 
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
@@ -524,7 +524,7 @@ void CheckResult(HRESULT hr, ID3DBlob *errorBlob) {
     }
 }
 
-void AppBase::CreateVertexShaderAndInputLayout(
+void EngineBase::CreateVertexShaderAndInputLayout(
     const wstring &filename, const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,
     ComPtr<ID3D11VertexShader> &vertexShader, ComPtr<ID3D11InputLayout> &inputLayout) {
 
@@ -545,7 +545,7 @@ void AppBase::CreateVertexShaderAndInputLayout(
                                 &inputLayout);
 }
 
-void AppBase::CreatePixelShader(const wstring &filename, ComPtr<ID3D11PixelShader> &pixelShader) {
+void EngineBase::CreatePixelShader(const wstring &filename, ComPtr<ID3D11PixelShader> &pixelShader) {
     ComPtr<ID3DBlob> shaderBlob;
     ComPtr<ID3DBlob> errorBlob;
 
@@ -559,7 +559,7 @@ void AppBase::CreatePixelShader(const wstring &filename, ComPtr<ID3D11PixelShade
                                 &pixelShader);
 }
 
-void AppBase::CreateIndexBuffer(const std::vector<uint16_t> &indices,
+void EngineBase::CreateIndexBuffer(const std::vector<uint16_t> &indices,
                                 ComPtr<ID3D11Buffer> &m_indexBuffer) {
     D3D11_BUFFER_DESC bufferDesc = {};
     bufferDesc.Usage = D3D11_USAGE_IMMUTABLE; // 초기화 후 변경X

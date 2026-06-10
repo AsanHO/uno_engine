@@ -8,10 +8,10 @@
     <ClCompile Include="Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="AppBase.cpp">
+    <ClCompile Include="EngineBase.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ExampleApp.cpp">
+    <ClCompile Include="UnoEngine.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
@@ -19,13 +19,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="AppBase.h">
+    <ClInclude Include="EngineBase.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ExampleApp.h">
+    <ClInclude Include="UnoEngine.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

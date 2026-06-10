@@ -19,10 +19,10 @@ using std::wstring;
 
 // 모든 예제들이 공통적으로 사용할 기능들을 가지고 있는
 // 부모 클래스
-class AppBase {
+class EngineBase {
   public:
-    AppBase();
-    virtual ~AppBase();
+    EngineBase();
+    virtual ~EngineBase();
 
     float GetAspectRatio() const;
 

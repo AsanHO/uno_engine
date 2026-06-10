@@ -133,14 +133,14 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="ExampleApp.cpp" />
+    <ClCompile Include="UnoEngine.cpp" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="AppBase.cpp" />
+    <ClCompile Include="EngineBase.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="ExampleApp.h" />
-    <ClInclude Include="AppBase.h" />
+    <ClInclude Include="UnoEngine.h" />
+    <ClInclude Include="EngineBase.h" />
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="ColorPixelShader.hlsl">

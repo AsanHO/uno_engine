@@ -119,30 +119,30 @@ tuple<vector<Vertex>, vector<uint16_t>> MakeBox() {
     return tuple{vertices, indices};
 }
 
-ExampleApp::ExampleApp() : AppBase(), m_indexCount(0) {}
+UnoEngine::UnoEngine() : EngineBase(), m_indexCount(0) {}
 
-bool ExampleApp::Initialize() {
+bool UnoEngine::Initialize() {
 
-    if (!AppBase::Initialize())
+    if (!EngineBase::Initialize())
         return false;
 
     // Geometry 정의
     auto [vertices, indices] = MakeBox();
 
     // 버텍스 버퍼 만들기
-    AppBase::CreateVertexBuffer(vertices, m_vertexBuffer);
+    EngineBase::CreateVertexBuffer(vertices, m_vertexBuffer);
 
     // 인덱스 버퍼 만들기
     m_indexCount = UINT(indices.size());
 
-    AppBase::CreateIndexBuffer(indices, m_indexBuffer);
+    EngineBase::CreateIndexBuffer(indices, m_indexBuffer);
 
     // ConstantBuffer 만들기
     m_constantBufferData.model = Matrix();
     m_constantBufferData.view = Matrix();
     m_constantBufferData.projection = Matrix();
 
-    AppBase::CreateConstantBuffer(m_constantBufferData, m_constantBuffer);
+    EngineBase::CreateConstantBuffer(m_constantBufferData, m_constantBuffer);
 
     // 쉐이더 만들기
 
@@ -161,15 +161,15 @@ bool ExampleApp::Initialize() {
         {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 4 * 3, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
-    AppBase::CreateVertexShaderAndInputLayout(L"ColorVertexShader.hlsl", inputElements,
+    EngineBase::CreateVertexShaderAndInputLayout(L"ColorVertexShader.hlsl", inputElements,
                                               m_colorVertexShader, m_colorInputLayout);
 
-    AppBase::CreatePixelShader(L"ColorPixelShader.hlsl", m_colorPixelShader);
+    EngineBase::CreatePixelShader(L"ColorPixelShader.hlsl", m_colorPixelShader);
 
     return true;
 }
 
-void ExampleApp::Update(float dt) {
+void UnoEngine::Update(float dt) {
     // dt는 이전 프레임과 다음 프레임의 시간차
     static float rot = 0.0f;
 
@@ -208,10 +208,10 @@ void ExampleApp::Update(float dt) {
     m_constantBufferData.projection = m_camera.GetProjRow().Transpose();
 
     // Constant를 CPU에서 GPU로 복사
-    AppBase::UpdateBuffer(m_constantBufferData, m_constantBuffer);
+    EngineBase::UpdateBuffer(m_constantBufferData, m_constantBuffer);
 }
 
-void ExampleApp::Render() {
+void UnoEngine::Render() {
 
     // IA: Input-Assembler stage
     // VS: Vertex Shader
@@ -256,7 +256,7 @@ void ExampleApp::Render() {
     m_context->DrawIndexed(m_indexCount, 0, 0);
 }
 
-void ExampleApp::UpdateGUI() {
+void UnoEngine::UpdateGUI() {
     ImGui::Checkbox("usePerspectiveProjection", &m_usePerspectiveProjection);
 }
 

@@ -26,9 +26,9 @@ struct ModelViewProjectionConstantBuffer {
     Matrix projection;
 };
 
-class ExampleApp : public AppBase {
+class UnoEngine : public EngineBase {
   public:
-    ExampleApp();
+    UnoEngine();
 
     virtual bool Initialize() override;
     virtual void UpdateGUI() override;
