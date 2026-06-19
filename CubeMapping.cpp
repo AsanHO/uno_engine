@@ -55,18 +55,17 @@ void CubeMapping::Initialize(ComPtr<ID3D11Device> &device, const wchar_t *envFil
 
 void CubeMapping::UpdateViewProjConstBuffer(ComPtr<ID3D11Device> &device,
                                             ComPtr<ID3D11DeviceContext> &context,
-                                            const Matrix &viewRowInput, const Matrix &projRow,
-                                            const Matrix &reflRow = Matrix()) {
+                                            const Matrix &viewRowInput, const Matrix &projRow) {
 
     Matrix viewRow = viewRowInput;
     viewRow.Translation(Vector3(0.0f)); // 이동 취소
 
     this->m_viewProjConstData.viewProj = (viewRow * projRow).Transpose();
-    this->m_mirrorViewProjConstData.viewProj = (reflRow * viewRow * projRow).Transpose();
+    //this->m_mirrorViewProjConstData.viewProj = (reflRow * viewRow * projRow).Transpose();
 
     D3D11Utils::UpdateBuffer(device, context, m_viewProjConstData, m_viewProjConstBuffer);
-    D3D11Utils::UpdateBuffer(device, context, m_mirrorViewProjConstData,
-                             m_mirrorViewProjConstBuffer);
+    /*D3D11Utils::UpdateBuffer(device, context, m_mirrorViewProjConstData,
+                             m_mirrorViewProjConstBuffer);*/
 }
 
 void CubeMapping::UpdatePixelConstBuffer(ComPtr<ID3D11Device> &device,

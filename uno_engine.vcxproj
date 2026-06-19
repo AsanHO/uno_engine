@@ -180,6 +180,14 @@
     <None Include=".clang-format" />
     <None Include="Common.hlsli" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseHDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseMDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvHDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvMDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularHDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularMDR.dds" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

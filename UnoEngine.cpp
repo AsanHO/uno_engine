@@ -104,6 +104,7 @@ tuple<vector<Vertex>, vector<uint32_t>> MakeBox() {
         Vertex v;
         v.position = positions[i];
         v.color = colors[i];
+        //v.normalModel = normals[i];
         vertices.push_back(v);
     }
 
@@ -125,15 +126,15 @@ bool UnoEngine::Initialize() {
 
     if (!EngineBase::Initialize())
         return false;
-   /* m_cubeMapping.Initialize(m_device, L"../Assets/Textures/Cubemaps/HDRI/indoorEnvHDR.dds",
-                             L"../Assets/Textures/Cubemaps/HDRI/indoorSpecularHDR.dds",
-                             L"../Assets/Textures/Cubemaps/HDRI/indoorDiffuseHDR.dds",
-                             L"../Assets/Textures/Cubemaps/HDRI/indoorBrdf.dds");*/
+    m_cubeMapping.Initialize(m_device, L"./Assets/Textures/Cubemaps/HDRI/indoorEnvHDR.dds",
+                             L"./Assets/Textures/Cubemaps/HDRI/indoorSpecularHDR.dds",
+                             L"./Assets/Textures/Cubemaps/HDRI/indoorDiffuseHDR.dds",
+                             L"./Assets/Textures/Cubemaps/HDRI/indoorBrdf.dds"); 
     // Geometry 정의
     auto [vertices, indices] = MakeBox();
 
     // 버텍스 버퍼 만들기
-    D3D11Utils::CreateVertexBuffer(m_device,vertices, m_vertexBuffer);
+    D3D11Utils::CreateVertexBuffer(m_device, vertices, m_vertexBuffer);
 
     // 인덱스 버퍼 만들기
     m_indexCount = UINT(indices.size());
@@ -167,10 +168,10 @@ bool UnoEngine::Initialize() {
         {"COLOR", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
-    D3D11Utils::CreateVertexShaderAndInputLayout(m_device,L"ColorVertexShader.hlsl", inputElements,
-                                              m_colorVertexShader, m_colorInputLayout);
+    D3D11Utils::CreateVertexShaderAndInputLayout(m_device, L"ColorVertexShader.hlsl", inputElements,
+                                                 m_colorVertexShader, m_colorInputLayout);
 
-    D3D11Utils::CreatePixelShader(m_device,L"ColorPixelShader.hlsl", m_colorPixelShader);
+    D3D11Utils::CreatePixelShader(m_device, L"ColorPixelShader.hlsl", m_colorPixelShader);
 
     return true;
 }
@@ -190,7 +191,15 @@ void UnoEngine::Update(float dt) {
         m_camera.MoveRight(dt);
     if (m_keyPressed[65])
         m_camera.MoveRight(-dt);
+    Vector3 eyeWorld = m_camera.GetEyePos();
+    // Matrix reflectionRow = Matrix::CreateReflection(m_mirrorPlane);
+    Matrix viewRow = m_camera.GetViewRow();
+    Matrix projRow = m_camera.GetProjRow();
 
+    // EngineBase::UpdateEyeViewProjBuffers(eyeWorld, viewRow, projRow);
+
+    // 큐브 매핑 Constant Buffer 업데이트
+    m_cubeMapping.UpdateViewProjConstBuffer(m_device, m_context, viewRow, projRow);
     // 모델의 변환
     m_constantBufferData.model = Matrix::CreateScale(0.5f) * Matrix::CreateRotationY(rot) *
                                  Matrix::CreateTranslation(Vector3(0.0f, -0.3f, 1.0f));
@@ -214,7 +223,7 @@ void UnoEngine::Update(float dt) {
     m_constantBufferData.projection = m_camera.GetProjRow().Transpose();
 
     // Constant를 CPU에서 GPU로 복사
-    D3D11Utils::UpdateBuffer(m_device,m_context,m_constantBufferData, m_constantBuffer);
+    D3D11Utils::UpdateBuffer(m_device, m_context, m_constantBufferData, m_constantBuffer);
 }
 
 void UnoEngine::Render() {
@@ -229,15 +238,17 @@ void UnoEngine::Render() {
 
     float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
     m_context->ClearRenderTargetView(m_renderTargetView.Get(), clearColor);
+    
     m_context->ClearDepthStencilView(m_depthStencilView.Get(),
                                      D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
     // 비교: Depth Buffer를 사용하지 않는 경우
     // m_context->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), nullptr);
+  
     m_context->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
 
     m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
-
+    m_cubeMapping.Render(m_context, false);
     // 어떤 쉐이더를 사용할지 설정
     m_context->VSSetShader(m_colorVertexShader.Get(), 0, 0);
 
