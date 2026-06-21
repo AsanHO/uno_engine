@@ -3,6 +3,8 @@
   <ItemGroup>
     <FxCompile Include="ColorPixelShader.hlsl" />
     <FxCompile Include="ColorVertexShader.hlsl" />
+    <FxCompile Include="CubeMappingPS.hlsl" />
+    <FxCompile Include="CubeMappingVs.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
@@ -17,9 +19,6 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="D3D11Utils.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="CubeMapping.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,6 +29,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="ModelLoader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ImageFilter.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PostProcess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -64,9 +69,19 @@
     <ClInclude Include="ModelLoader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="D3D11Utils.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageFilter.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PostProcess.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="Common.hlsli" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Header Files">
@@ -75,5 +90,13 @@
     <Filter Include="Source Files">
       <UniqueIdentifier>{f6ad9a9a-efa7-4f62-9a0a-18c9c232db49}</UniqueIdentifier>
     </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseHDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseMDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvHDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvMDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularHDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularMDR.dds" />
   </ItemGroup>
 </Project>

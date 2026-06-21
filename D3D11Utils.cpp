@@ -1,3 +1,4 @@
+//#pragma message("=== D3D11Utils.cpp IS COMPILING ===")
 #define _CRT_SECURE_NO_WARNINGS // stb_image_write compile error fix
 
 #include "D3D11Utils.h"

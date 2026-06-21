@@ -10,6 +10,8 @@
 #include <windows.h>
 #include <wrl.h> // ComPtr
 #include "Camera.h"
+//#include "D3D11Utils.h"
+#include "PostProcess.h"
 
 namespace hlab {
 
@@ -44,10 +46,10 @@ class EngineBase {
     bool InitMainWindow();
     bool InitDirect3D();
     bool InitGUI();
-    void CreateVertexShaderAndInputLayout(const wstring &filename,
+    /*void CreateVertexShaderAndInputLayout(const wstring &filename,
                                           const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,
                                           ComPtr<ID3D11VertexShader> &vertexShader,
-                                          ComPtr<ID3D11InputLayout> &inputLayout);
+                                          ComPtr<ID3D11InputLayout> &inputLayout);*/
     void CreatePixelShader(const wstring &filename, ComPtr<ID3D11PixelShader> &pixelShader);
     void CreateIndexBuffer(const vector<uint16_t> &indices, ComPtr<ID3D11Buffer> &m_indexBuffer);
 
@@ -76,7 +78,7 @@ class EngineBase {
             std::cout << "CreateBuffer() failed. " << std::hex << hr << std::endl;
         };
     }
-
+    // TODO::gui값 조정시 포스트프로세스 버퍼가 업데이트 안되는 버그가 있으므로 버그 픽스 필요
     template <typename T_CONSTANT>
     void CreateConstantBuffer(const T_CONSTANT &constantBufferData,
                               ComPtr<ID3D11Buffer> &constantBuffer) {
@@ -123,6 +125,9 @@ class EngineBase {
     ComPtr<ID3D11Texture2D> m_depthStencilBuffer;
     ComPtr<ID3D11DepthStencilView> m_depthStencilView;
     ComPtr<ID3D11DepthStencilState> m_depthStencilState;
+
+    //후처리 필터 
+    PostProcess m_postProcess;
 
     //카메라 클래스
     Camera m_camera;

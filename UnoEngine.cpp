@@ -275,6 +275,20 @@ void UnoEngine::Render() {
 
 void UnoEngine::UpdateGUI() {
     ImGui::Checkbox("usePerspectiveProjection", &m_usePerspectiveProjection);
+    if (ImGui::TreeNode("Post Processing")) {
+        int flag = 0;
+        flag += ImGui::SliderFloat("Bloom Strength",
+                                   &m_postProcess.m_combineFilter.m_constData.strength, 0.0f, 1.0f);
+        flag += ImGui::SliderFloat("Exposure", &m_postProcess.m_combineFilter.m_constData.option1,
+                                   0.0f, 10.0f);
+        flag += ImGui::SliderFloat("Gamma", &m_postProcess.m_combineFilter.m_constData.option2,
+                                   0.1f, 5.0f);
+        // 편의상 사용자 입력이 인식되면 바로 GPU 버퍼를 업데이트
+        if (flag) {
+            m_postProcess.m_combineFilter.UpdateConstantBuffers(m_device, m_context);
+        }
+        ImGui::TreePop();
+    }
 }
 
 } // namespace hlab
