@@ -6,10 +6,9 @@
 #include <memory>
 #include <vector>
 
-
-#include "EngineBase.h"
 #include "BasicMeshGroup.h"
 #include "CubeMapping.h"
+#include "EngineBase.h"
 
 namespace hlab {
 
@@ -17,18 +16,10 @@ using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector3;
 
 // 이 예제에서 사용하는 Vertex 정의
-//struct Vertex {
+// struct Vertex {
 //    Vector3 position;
 //    Vector3 color;
 //};
-
-// 이 예제에서 ConstantBuffer로 보낼 데이터
-struct ModelViewProjectionConstantBuffer {
-    Matrix model;
-    Matrix view;
-    Matrix projection;
-};
-
 class UnoEngine : public EngineBase {
   public:
     UnoEngine();
@@ -39,21 +30,8 @@ class UnoEngine : public EngineBase {
     virtual void Render() override;
 
   protected:
-
     BasicMeshGroup m_mainSphere;
-    
     CubeMapping m_cubeMapping;
-
-    ComPtr<ID3D11VertexShader> m_colorVertexShader;
-    ComPtr<ID3D11PixelShader> m_colorPixelShader;
-    ComPtr<ID3D11InputLayout> m_colorInputLayout;
-
-    ComPtr<ID3D11Buffer> m_vertexBuffer;
-    ComPtr<ID3D11Buffer> m_indexBuffer;
-    ComPtr<ID3D11Buffer> m_constantBuffer;
-    UINT m_indexCount;
-
-    ModelViewProjectionConstantBuffer m_constantBufferData;
 
     bool m_usePerspectiveProjection = true;
 };
