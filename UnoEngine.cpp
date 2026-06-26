@@ -195,7 +195,10 @@ void UnoEngine::Update(float dt) {
     m_cubeMapping.UpdateViewProjConstBuffer(m_device, m_context, viewRow, projRow);
 
     using namespace DirectX;
-
+    m_mainSphere.m_basicVertexConstantData.view = viewRow.Transpose();
+    m_mainSphere.m_basicVertexConstantData.projection = projRow.Transpose();
+    m_mainSphere.m_basicPixelConstantData.eyeWorld = eyeWorld;
+    m_mainSphere.UpdateConstantBuffers(m_device, m_context);
     // 시점 변환 todo:: 카메라 클래스 만들기
     m_constantBufferData.view = m_camera.GetViewRow().Transpose();
     m_constantBufferData.projection = m_camera.GetProjRow().Transpose();

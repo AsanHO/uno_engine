@@ -31,7 +31,7 @@ class BasicMeshGroup {
     // https://jsantell.com/model-view-projection/
     Matrix m_modelWorldRow = Matrix();
     Matrix m_invTransposeRow = Matrix();
-
+    
     // ExampleApp::Update()에서 접근
     BasicVertexConstantData m_basicVertexConstantData;
     BasicPixelConstantData m_basicPixelConstantData;
