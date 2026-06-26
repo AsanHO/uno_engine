@@ -132,11 +132,14 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BasicMeshGroup.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CubeMapping.cpp" />
     <ClCompile Include="D3D11Utils.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">false</ExcludedFromBuild>
     </ClCompile>
+    <ClInclude Include="BasicConstantData.h" />
+    <ClInclude Include="BasicMeshGroup.h" />
     <ClInclude Include="D3D11Utils.h" />
     <ClCompile Include="GeometryGenerator.cpp" />
     <ClCompile Include="ImageFilter.cpp" />
@@ -151,6 +154,7 @@
     <ClInclude Include="CubeMapping.h" />
     <ClInclude Include="GeometryGenerator.h" />
     <ClInclude Include="ImageFilter.h" />
+    <ClInclude Include="Light.h" />
     <ClInclude Include="Material.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshData.h" />

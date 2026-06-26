@@ -102,7 +102,35 @@ class D3D11Utils {
 
         ThrowIfFailed(device->CreateBuffer(&desc, &initData, constantBuffer.GetAddressOf()));
     }
+    template <typename T_CONSTANT>
+    static void CreateConstantBuffer(ComPtr<ID3D11Device> &device,
+                                     const T_CONSTANT &constantBufferData,
+                                     ComPtr<ID3D11Buffer> &constantBuffer) {
+        // ÁÖÀÇ:
+        // For a constant buffer (BindFlags of D3D11_BUFFER_DESC set to
+        // D3D11_BIND_CONSTANT_BUFFER), you must set the ByteWidth value of
+        // D3D11_BUFFER_DESC in multiples of 16, and less than or equal to
+        // D3D11_REQ_CONSTANT_BUFFER_ELEMENT_COUNT.
 
+        D3D11_BUFFER_DESC cbDesc;
+        cbDesc.ByteWidth = sizeof(constantBufferData);
+        cbDesc.Usage = D3D11_USAGE_DYNAMIC;
+        cbDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        cbDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        cbDesc.MiscFlags = 0;
+        cbDesc.StructureByteStride = 0;
+
+        // Fill in the subresource data.
+        D3D11_SUBRESOURCE_DATA initData;
+        initData.pSysMem = &constantBufferData;
+        initData.SysMemPitch = 0;
+        initData.SysMemSlicePitch = 0;
+
+        auto hr = device->CreateBuffer(&cbDesc, &initData, constantBuffer.GetAddressOf());
+        if (FAILED(hr)) {
+            std::cout << "CreateConstantBuffer() CreateBuffer failed()." << std::endl;
+        }
+    }
     template <typename T_DATA>
     static void UpdateBuffer(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
                              const T_DATA &bufferData, ComPtr<ID3D11Buffer> &buffer) {
@@ -118,8 +146,7 @@ class D3D11Utils {
     }
 
     static void CreateTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-                              const std::string filename, const bool usSRGB,
-                              ComPtr<ID3D11Texture2D> &texture,
+                              const std::string filename, ComPtr<ID3D11Texture2D> &texture,
                               ComPtr<ID3D11ShaderResourceView> &textureResourceView);
 
     static void CreateMetallicRoughnessTexture(ComPtr<ID3D11Device> &device,

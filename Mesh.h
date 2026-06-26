@@ -18,8 +18,8 @@ struct Mesh {
     ComPtr<ID3D11Buffer> vertexBuffer;
     ComPtr<ID3D11Buffer> indexBuffer;
 
-    ComPtr<ID3D11Buffer> vertexConstBuffer;
-    ComPtr<ID3D11Buffer> pixelConstBuffer;
+    ComPtr<ID3D11Buffer> vertexConstantBuffer;
+    ComPtr<ID3D11Buffer> pixelConstantBuffer;
 
     ComPtr<ID3D11Texture2D> albedoTexture;
     ComPtr<ID3D11Texture2D> emissiveTexture; // ºûÀ» ³»´Â ÅØ½ºÃç Ãß°¡
@@ -35,6 +35,10 @@ struct Mesh {
     ComPtr<ID3D11ShaderResourceView> aoSRV;
     ComPtr<ID3D11ShaderResourceView> metallicRoughnessSRV;
 
+    ComPtr<ID3D11ShaderResourceView> albedoTextureResourceView;
+    ComPtr<ID3D11ShaderResourceView> normalTextureResourceView;
+    ComPtr<ID3D11ShaderResourceView> heightTextureResourceView;
+    ComPtr<ID3D11ShaderResourceView> aoTextureResourceView;
     UINT m_indexCount = 0;
     UINT m_vertexCount = 0;
 };

@@ -17,7 +17,7 @@ void CubeMapping::Initialize(ComPtr<ID3D11Device> &device, const wchar_t *envFil
 
     D3D11Utils::CreateConstBuffer(device, m_viewProjConstData, m_viewProjConstBuffer);
     D3D11Utils::CreateConstBuffer(device, m_mirrorViewProjConstData, m_mirrorViewProjConstBuffer);
-    D3D11Utils::CreateConstBuffer(device, m_pixelConstData, m_cubeMesh->pixelConstBuffer);
+    D3D11Utils::CreateConstBuffer(device, m_pixelConstData, m_cubeMesh->pixelConstantBuffer);
 
     MeshData cubeMeshData = GeometryGenerator::MakeBox(40.0f);
     std::reverse(cubeMeshData.indices.begin(), cubeMeshData.indices.end());
@@ -70,7 +70,7 @@ void CubeMapping::UpdateViewProjConstBuffer(ComPtr<ID3D11Device> &device,
 
 void CubeMapping::UpdatePixelConstBuffer(ComPtr<ID3D11Device> &device,
                                          ComPtr<ID3D11DeviceContext> &context) {
-    D3D11Utils::UpdateBuffer(device, context, m_pixelConstData, m_cubeMesh->pixelConstBuffer);
+    D3D11Utils::UpdateBuffer(device, context, m_pixelConstData, m_cubeMesh->pixelConstantBuffer);
 }
 
 void CubeMapping::Render(ComPtr<ID3D11DeviceContext> &context, const bool &mirror) {
@@ -95,7 +95,7 @@ void CubeMapping::Render(ComPtr<ID3D11DeviceContext> &context, const bool &mirro
     context->PSSetShaderResources(0, UINT(srvs.size()), srvs.data());
     context->PSSetShader(m_pixelShader.Get(), 0, 0);
     context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
-    context->PSSetConstantBuffers(0, 1, m_cubeMesh->pixelConstBuffer.GetAddressOf());
+    context->PSSetConstantBuffers(0, 1, m_cubeMesh->pixelConstantBuffer.GetAddressOf());
 
     context->DrawIndexed(m_cubeMesh->m_indexCount, 0, 0);
 }

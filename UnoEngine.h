@@ -6,8 +6,10 @@
 #include <memory>
 #include <vector>
 
-#include "CubeMapping.h"
+
 #include "EngineBase.h"
+#include "BasicMeshGroup.h"
+#include "CubeMapping.h"
 
 namespace hlab {
 
@@ -37,6 +39,9 @@ class UnoEngine : public EngineBase {
     virtual void Render() override;
 
   protected:
+
+    BasicMeshGroup m_mainSphere;
+    
     CubeMapping m_cubeMapping;
 
     ComPtr<ID3D11VertexShader> m_colorVertexShader;
