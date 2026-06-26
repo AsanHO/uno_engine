@@ -84,19 +84,17 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Devic
         {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
-    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"BasicVertexShader.hlsl",
-                                                 basicInputElements, m_basicVertexShader,
-                                                 m_basicInputLayout);
+    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"BasicVS.hlsl", basicInputElements,
+                                                 m_basicVertexShader, m_basicInputLayout);
 
-    D3D11Utils::CreatePixelShader(device, L"BasicPixelShader.hlsl", m_basicPixelShader);
+    D3D11Utils::CreatePixelShader(device, L"BasicPS.hlsl", m_basicPixelShader);
 
     // Geometry shader 초기화하기
-    D3D11Utils::CreateGeometryShader(device, L"NormalGeometryShader.hlsl", m_normalGeometryShader);
+    D3D11Utils::CreateGeometryShader(device, L"NormalGS.hlsl", m_normalGeometryShader);
 
-    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"NormalVertexShader.hlsl",
-                                                 basicInputElements, m_normalVertexShader,
-                                                 m_basicInputLayout);
-    D3D11Utils::CreatePixelShader(device, L"NormalPixelShader.hlsl", m_normalPixelShader);
+    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"NormalVS.hlsl", basicInputElements,
+                                                 m_normalVertexShader, m_basicInputLayout);
+    D3D11Utils::CreatePixelShader(device, L"NormalPS.hlsl", m_normalPixelShader);
 
     D3D11Utils::CreateConstantBuffer(device, m_normalVertexConstantData,
                                      m_normalVertexConstantBuffer);
@@ -130,16 +128,16 @@ void BasicMeshGroup::Render(ComPtr<ID3D11DeviceContext> &context) {
 
         context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
         context->PSSetShader(m_basicPixelShader.Get(), 0, 0);
-
+         
         // 물체 렌더링할 때 여러가지 텍스춰 사용
-        // vector<ID3D11ShaderResourceView *> resViews = {
-        //    m_diffuseResView.Get(), m_specularResView.Get(),
-        //    mesh->albedoTextureResourceView.Get(),
-        //    mesh->normalTextureResourceView.Get(),
-        //    mesh->aoTextureResourceView.Get()};
-        vector<ID3D11ShaderResourceView *> resViews = {
+         vector<ID3D11ShaderResourceView *> resViews = {
+            m_diffuseResView.Get(), m_specularResView.Get(),
+            mesh->albedoTextureResourceView.Get(),
+            mesh->normalTextureResourceView.Get(),
+            mesh->aoTextureResourceView.Get()};
+        /*vector<ID3D11ShaderResourceView *> resViews = {
             nullptr, nullptr, mesh->albedoTextureResourceView.Get(),
-            mesh->normalTextureResourceView.Get(), mesh->aoTextureResourceView.Get()};
+            mesh->normalTextureResourceView.Get(), mesh->aoTextureResourceView.Get()};*/
         context->PSSetShaderResources(0, UINT(resViews.size()), resViews.data());
 
         context->PSSetConstantBuffers(0, 1, mesh->pixelConstantBuffer.GetAddressOf());
