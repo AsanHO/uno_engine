@@ -164,6 +164,9 @@ LRESULT EngineBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         break;
     case WM_KEYUP:
         // 키보드가 눌린 상태인지 아닌지 저장
+        if (wParam == 'F') { // f키 일인칭 시점
+            m_camera.m_isUseFirstPersonView = !m_camera.m_isUseFirstPersonView;
+        }
         m_keyPressed[wParam] = false;
         break;
     case WM_DESTROY:

@@ -59,19 +59,10 @@ bool UnoEngine::Initialize() {
 
 void UnoEngine::Update(float dt) {
     // dt는 이전 프레임과 다음 프레임의 시간차
-    static float rot = 0.0f;
-
-    rot += dt;
-    if (m_keyPressed[16])
-        dt *= 5;
-    if (m_keyPressed[87])
-        m_camera.MoveForward(dt);
-    if (m_keyPressed[83])
-        m_camera.MoveForward(-dt);
-    if (m_keyPressed[68])
-        m_camera.MoveRight(dt);
-    if (m_keyPressed[65])
-        m_camera.MoveRight(-dt);
+    
+    // 카메라 이동
+    m_camera.UpdateKeyboard(dt, m_keyPressed);
+   
     Vector3 eyeWorld = m_camera.GetEyePos();
     // Matrix reflectionRow = Matrix::CreateReflection(m_mirrorPlane);
     Matrix viewRow = m_camera.GetViewRow();

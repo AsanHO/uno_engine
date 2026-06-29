@@ -11,11 +11,14 @@ class Camera {
     Matrix GetViewRow();
     Matrix GetProjRow();
     Vector3 GetEyePos();
-
-    void UpdateMouse(float mouseNdcX, float mouseNdcY);
+    void UpdateKeyboard(const float dt, bool const keyPressed[256]);
+    void UpdateMouse(const float mouseNdcX, const float mouseNdcY);
     void MoveForward(float dt);
     void MoveRight(float dt);
     void SetAspectRatio(float aspect);
+
+  public:
+    bool m_isUseFirstPersonView = false;
 
   private:
     // 1인칭 시점은 FPS 게임을 떠올리시면 됩니다.

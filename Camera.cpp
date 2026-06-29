@@ -18,7 +18,25 @@ Matrix Camera::GetViewRow() {
 
 Vector3 Camera::GetEyePos() { return m_position; }
 
-void Camera::UpdateMouse(float deltaX, float deltaY) {
+void Camera::UpdateKeyboard(float dt, bool const keyPressed[256]) {
+    if (!m_isUseFirstPersonView)
+        return;
+    if (keyPressed[16])
+        dt *= 5;
+    if (keyPressed['W'])
+        MoveForward(dt);
+    if (keyPressed['S'])
+        MoveForward(-dt);
+    if (keyPressed['D'])
+        MoveRight(dt);
+    if (keyPressed['A'])
+        MoveRight(-dt);
+    //TODO :: 점프 구현
+}
+
+void Camera::UpdateMouse(const float deltaX, const float deltaY) {
+    if (!m_isUseFirstPersonView)
+        return;
     // 얼마나 회전할지 계산
     // https://en.wikipedia.org/wiki/Aircraft_principal_axes
 
