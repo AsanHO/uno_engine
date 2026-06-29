@@ -6,7 +6,7 @@
 #include "MeshData.h"
 
 namespace hlab {
-
+      
 class BasicMeshGroup {
   public:
     void Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
@@ -37,8 +37,9 @@ class BasicMeshGroup {
     BasicPixelConstantData m_basicPixelConstantData;
 
     // ExampleApp:Initialize()에서 접근
-    ComPtr<ID3D11ShaderResourceView> m_diffuseResView;
-    ComPtr<ID3D11ShaderResourceView> m_specularResView;
+    ComPtr<ID3D11ShaderResourceView> m_irradianceSRV;
+    ComPtr<ID3D11ShaderResourceView> m_specularSRV;
+    ComPtr<ID3D11ShaderResourceView> m_brdfSRV;
 
     // GUI에서 업데이트 할 때 사용
     NormalVertexConstantData m_normalVertexConstantData;

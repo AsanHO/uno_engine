@@ -8,7 +8,6 @@ namespace hlab {
 
 using namespace std;
 
-
 UnoEngine::UnoEngine() : EngineBase() {}
 
 bool UnoEngine::Initialize() {
@@ -19,14 +18,14 @@ bool UnoEngine::Initialize() {
                              L"./Assets/Textures/Cubemaps/HDRI/indoorSpecularHDR.dds",
                              L"./Assets/Textures/Cubemaps/HDRI/indoorDiffuseHDR.dds",
                              L"./Assets/Textures/Cubemaps/HDRI/indoorBrdf.dds");
-     
+
     // Main Sphere
     {
         Vector3 center(0.0f, 0.5f, 1.0f);
         float radius = 0.4f;
         MeshData sphere = GeometryGenerator::MakeSphere(radius, 100, 100, {1.0f, 1.0f});
 
-        // 여러가지 텍스춰들!
+        // PBR textures
         sphere.albedoTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
                                        "grey_porous_rock_40_56_diffuse.jpg";
 
@@ -40,9 +39,16 @@ bool UnoEngine::Initialize() {
         sphere.aoTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
                                    "grey_porous_rock_40_56_ao.jpg";
 
+        sphere.metallicTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
+                                         "grey_porous_rock_40_56_metallic.jpg";
+
+        sphere.roughnessTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
+                                          "grey_porous_rock_40_56_roughness.jpg";
+
         m_mainSphere.Initialize(m_device, m_context, {sphere});
-        m_mainSphere.m_diffuseResView = m_cubeMapping.m_diffuseResView;
-        m_mainSphere.m_specularResView = m_cubeMapping.m_specularResView;
+        m_mainSphere.m_irradianceSRV = m_cubeMapping.m_irradianceSRV;
+        m_mainSphere.m_specularSRV = m_cubeMapping.m_specularSRV;
+        m_mainSphere.m_brdfSRV = m_cubeMapping.m_brdfSRV;
         m_mainSphere.UpdateModelWorld(Matrix::CreateTranslation(center));
         m_mainSphere.m_basicPixelConstantData.useTexture = true;
 
@@ -59,10 +65,10 @@ bool UnoEngine::Initialize() {
 
 void UnoEngine::Update(float dt) {
     // dt는 이전 프레임과 다음 프레임의 시간차
-    
+
     // 카메라 이동
     m_camera.UpdateKeyboard(dt, m_keyPressed);
-   
+
     Vector3 eyeWorld = m_camera.GetEyePos();
     // Matrix reflectionRow = Matrix::CreateReflection(m_mirrorPlane);
     Matrix viewRow = m_camera.GetViewRow();
@@ -78,7 +84,6 @@ void UnoEngine::Update(float dt) {
     m_mainSphere.m_basicVertexConstantData.projection = projRow.Transpose();
     m_mainSphere.m_basicPixelConstantData.eyeWorld = eyeWorld;
     m_mainSphere.UpdateConstantBuffers(m_device, m_context);
-
 }
 
 void UnoEngine::Render() {

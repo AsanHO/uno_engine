@@ -50,27 +50,35 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Devic
 
             std::cout << meshData.albedoTextureFilename << std::endl;
             D3D11Utils::CreateTexture(device, context, meshData.albedoTextureFilename,
-                                      newMesh->albedoTexture, newMesh->albedoTextureResourceView);
+                                      newMesh->albedoTexture, newMesh->albedoSRV);
         }
 
         if (!meshData.normalTextureFilename.empty()) {
             std::cout << meshData.normalTextureFilename << std::endl;
             D3D11Utils::CreateTexture(device, context, meshData.normalTextureFilename,
-                                      newMesh->normalTexture, newMesh->normalTextureResourceView);
+                                      newMesh->normalTexture, newMesh->normalSRV);
         }
 
         if (!meshData.heightTextureFilename.empty()) {
             std::cout << meshData.heightTextureFilename << std::endl;
             D3D11Utils::CreateTexture(device, context, meshData.heightTextureFilename,
-                                      newMesh->heightTexture, newMesh->heightTextureResourceView);
+                                      newMesh->heightTexture, newMesh->heightSRV);
         }
 
         if (!meshData.aoTextureFilename.empty()) {
             std::cout << meshData.aoTextureFilename << std::endl;
             D3D11Utils::CreateTexture(device, context, meshData.aoTextureFilename,
-                                      newMesh->aoTexture, newMesh->aoTextureResourceView);
+                                      newMesh->aoTexture, newMesh->aoSRV);
+        }
+        if (!meshData.metallicTextureFilename.empty()) {
+            D3D11Utils::CreateTexture(device, context, meshData.metallicTextureFilename,
+                                      newMesh->metallicTexture, newMesh->metallicSRV);
         }
 
+        if (!meshData.roughnessTextureFilename.empty()) {
+            D3D11Utils::CreateTexture(device, context, meshData.roughnessTextureFilename,
+                                      newMesh->roughnessTexture, newMesh->roughnessSRV);
+        }
         newMesh->vertexConstantBuffer = m_vertexConstantBuffer;
         newMesh->pixelConstantBuffer = m_pixelConstantBuffer;
 
@@ -122,22 +130,30 @@ void BasicMeshGroup::Render(ComPtr<ID3D11DeviceContext> &context) {
         context->VSSetShader(m_basicVertexShader.Get(), 0, 0);
 
         // VertexShader에서도 Texture 사용
-        context->VSSetShaderResources(0, 1, mesh->heightTextureResourceView.GetAddressOf());
+        context->VSSetShaderResources(0, 1, mesh->heightSRV.GetAddressOf());
         context->VSSetSamplers(0, 1, m_samplerState.GetAddressOf());
         context->VSSetConstantBuffers(0, 1, mesh->vertexConstantBuffer.GetAddressOf());
 
         context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
         context->PSSetShader(m_basicPixelShader.Get(), 0, 0);
-         
+        /*
+        TextureCube specularIBLTex : register(t0); //specular에 사용
+        TextureCube irradianceIBLTex : register(t1); //diffuse에 사용
+        Texture2D brdfTex : register(t2); //
+        Texture2D albedoTex : register(t3);
+        Texture2D normalTex : register(t4);
+        Texture2D aoTex : register(t5);
+        Texture2D metallicTex : register(t6);
+        Texture2D roughnessTex : register(t7);
+        */
         // 물체 렌더링할 때 여러가지 텍스춰 사용
-         vector<ID3D11ShaderResourceView *> resViews = {
-            m_diffuseResView.Get(), m_specularResView.Get(),
-            mesh->albedoTextureResourceView.Get(),
-            mesh->normalTextureResourceView.Get(),
-            mesh->aoTextureResourceView.Get()};
+        vector<ID3D11ShaderResourceView *> resViews = {
+            m_specularSRV.Get(),     m_irradianceSRV.Get(),   m_brdfSRV.Get(),
+            mesh->albedoSRV.Get(),   mesh->normalSRV.Get(),   mesh->aoSRV.Get(),
+            mesh->metallicSRV.Get(), mesh->roughnessSRV.Get()};
         /*vector<ID3D11ShaderResourceView *> resViews = {
-            nullptr, nullptr, mesh->albedoTextureResourceView.Get(),
-            mesh->normalTextureResourceView.Get(), mesh->aoTextureResourceView.Get()};*/
+            nullptr, nullptr, mesh->albedoSRV.Get(),
+            mesh->normalSRV.Get(), mesh->aoSRV.Get()};*/
         context->PSSetShaderResources(0, UINT(resViews.size()), resViews.data());
 
         context->PSSetConstantBuffers(0, 1, mesh->pixelConstantBuffer.GetAddressOf());
