@@ -3,34 +3,34 @@
 // 참고자료
 // https://github.com/Nadrin/PBR/blob/master/data/shaders/hlsl/pbr.hlsl
 
-TextureCube specularIBLTex : register(t0); //specular에 사용
-TextureCube irradianceIBLTex : register(t1); //diffuse에 사용
-Texture2D brdfTex : register(t2); //
-Texture2D albedoTex : register(t3);
-Texture2D normalTex : register(t4);
-Texture2D aoTex : register(t5);
-Texture2D metallicTex : register(t6);
-Texture2D roughnessTex : register(t7);
+TextureCube specularIBLTex : register(t0); // 환경의 반사광 (roughness별 블러된 큐브맵)
+TextureCube irradianceIBLTex : register(t1); // 환경의 확산광 (디퓨즈용 적분된 큐브맵)
+Texture2D brdfTex : register(t2); // 환경 BRDF 룩업테이블
+Texture2D albedoTex : register(t3); // 기본 색상 텍스처
+Texture2D normalTex : register(t4); // 노멀맵
+Texture2D aoTex : register(t5); // Ambient Occlusion 맵
+Texture2D metallicTex : register(t6); // 금속성 맵
+Texture2D roughnessTex : register(t7); // 거칠기 맵
 
-SamplerState linearSampler : register(s0);
-SamplerState clampSampler : register(s1);
+SamplerState linearSampler : register(s0); // 일반 텍스처용, Wrap 모드
+SamplerState clampSampler : register(s1); // brdf LUT용, Clamp 모드
 
 static const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
 
 cbuffer BasicPixelConstData : register(b0)
 {
-    float3 eyeWorld;
-    float mipmapLevel;
-    Material material;
-    Light light[MAX_LIGHTS];
-    int useAlbedoMap;
+    float3 eyeWorld; // 카메라 위치
+    float mipmapLevel; // (현재 PS 코드에서는 안 쓰임)
+    Material material; // 재질 기본값 (텍스처 없을 때 사용)
+    Light light[MAX_LIGHTS]; // 조명 정보 배열
+    int useAlbedoMap; // 텍스처 사용 여부 플래그들
     int useNormalMap;
-    int useAOMap; // Ambient Occlusion
+    int useAOMap;
     int invertNormalMapY;
     int useMetallicMap;
     int useRoughnessMap;
-    float exposure;
-    float gamma;
+    float exposure; // (현재 PS 코드에서는 안 쓰임, CombinePS에서 쓰일 가능성)
+    float gamma; // (현재 PS 코드에서는 안 쓰임)
 };
 
 float3 SchlickFresnel(float3 F0, float NdotH)
@@ -158,7 +158,7 @@ PixelShaderOutput main(PixelShaderInput input)
         float NdotH = max(0.0, dot(normalWorld, halfway));
         float NdotO = max(0.0, dot(normalWorld, pixelToEye));
         
-        const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
+
         float3 F0 = lerp(Fdielectric, albedo, metallic);
         float3 F = SchlickFresnel(F0, max(0.0, dot(halfway, pixelToEye)));
         float3 kd = lerp(float3(1, 1, 1) - F, float3(0, 0, 0), metallic);
