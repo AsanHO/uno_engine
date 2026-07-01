@@ -96,20 +96,25 @@ void UnoEngine::Render() {
 
     m_context->RSSetViewports(1, &m_screenViewport);
 
-    float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-    m_context->ClearRenderTargetView(m_backBufferRTV.Get(), clearColor);
-
+    const float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+    vector<ID3D11RenderTargetView *> renderTargetViews = {m_floatRTV.Get()};
+    for (size_t i = 0; i < renderTargetViews.size(); i++) {
+        m_context->ClearRenderTargetView(renderTargetViews[i], clearColor);
+    }
     m_context->ClearDepthStencilView(m_depthStencilView.Get(),
                                      D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-    // 비교: Depth Buffer를 사용하지 않는 경우
-    // m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), nullptr);
-
-    m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), m_depthStencilView.Get());
-
+    m_context->OMSetRenderTargets(UINT(renderTargetViews.size()), renderTargetViews.data(),
+                                  m_depthStencilView.Get());
     m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
+    
     m_cubeMapping.Render(m_context, false);
     m_mainSphere.Render(m_context);
+    // m_float
+    m_context->ResolveSubresource(m_resolvedBuffer.Get(), 0, m_floatBuffer.Get(), 0,
+                                  DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+    m_postProcess.Render(m_context);
 }
 
 void UnoEngine::UpdateGUI() {
