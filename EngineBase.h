@@ -46,6 +46,8 @@ class EngineBase {
     bool InitMainWindow();
     bool InitDirect3D();
     bool InitGUI();
+    void CreateBuffers();
+    // void SetViewport(); 미구현
  
   public:
     // 변수 이름 붙이는 규칙은 VS DX11/12 기본 템플릿을 따릅니다.
@@ -57,7 +59,6 @@ class EngineBase {
 
     ComPtr<ID3D11Device> m_device;
     ComPtr<ID3D11DeviceContext> m_context;
-    ComPtr<ID3D11RenderTargetView> m_renderTargetView;
     ComPtr<IDXGISwapChain> m_swapChain;
     ComPtr<ID3D11RasterizerState> m_rasterizerSate;
 
@@ -65,6 +66,23 @@ class EngineBase {
     ComPtr<ID3D11Texture2D> m_depthStencilBuffer;
     ComPtr<ID3D11DepthStencilView> m_depthStencilView;
     ComPtr<ID3D11DepthStencilState> m_depthStencilState;
+
+     // BackBuffer
+    ComPtr<ID3D11RenderTargetView> m_backBufferRTV;
+
+    // Float MSAA Buffer (HDR 렌더링용)
+    ComPtr<ID3D11Texture2D> m_floatBuffer;
+    ComPtr<ID3D11ShaderResourceView> m_floatSRV;
+    ComPtr<ID3D11RenderTargetView> m_floatRTV;
+
+    // Resolved Buffer (MSAA 해제 후)
+    ComPtr<ID3D11Texture2D> m_resolvedBuffer;
+    ComPtr<ID3D11ShaderResourceView> m_resolvedSRV;
+    ComPtr<ID3D11RenderTargetView> m_resolvedRTV;
+
+    // MSAA 관련
+    UINT m_numQualityLevels = 0;
+    bool m_useMSAA = true;
 
     //후처리 필터 
     PostProcess m_postProcess;

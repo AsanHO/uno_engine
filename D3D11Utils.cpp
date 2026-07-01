@@ -34,7 +34,36 @@ void CheckResult(HRESULT hr, ID3DBlob *errorBlob) {
         }
     }
 }
+void D3D11Utils::CreateDepthBuffer(ComPtr<ID3D11Device> &device, int screenWidth, int screenHeight,
+                                   UINT numQualityLevels,
+                                   ComPtr<ID3D11DepthStencilView> &depthStencilView) {
 
+    D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
+    depthStencilBufferDesc.Width = screenWidth;
+    depthStencilBufferDesc.Height = screenHeight;
+    depthStencilBufferDesc.MipLevels = 1;
+    depthStencilBufferDesc.ArraySize = 1;
+    depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    if (numQualityLevels > 0) {
+        depthStencilBufferDesc.SampleDesc.Count = 4; // how many multisamples
+        depthStencilBufferDesc.SampleDesc.Quality = numQualityLevels - 1;
+    } else {
+        depthStencilBufferDesc.SampleDesc.Count = 1; // how many multisamples
+        depthStencilBufferDesc.SampleDesc.Quality = 0;
+    }
+    depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
+    depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    depthStencilBufferDesc.CPUAccessFlags = 0;
+    depthStencilBufferDesc.MiscFlags = 0;
+
+    ComPtr<ID3D11Texture2D> depthStencilBuffer;
+
+    ThrowIfFailed(
+        device->CreateTexture2D(&depthStencilBufferDesc, 0, depthStencilBuffer.GetAddressOf()));
+
+    ThrowIfFailed(device->CreateDepthStencilView(depthStencilBuffer.Get(), 0,
+                                                 depthStencilView.GetAddressOf()));
+}
 void D3D11Utils::CreateVertexShaderAndInputLayout(
     ComPtr<ID3D11Device> &device, const wstring &filename,
     const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,

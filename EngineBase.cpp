@@ -402,18 +402,10 @@ bool EngineBase::InitDirect3D() {
         cout << "D3D11CreateDeviceAndSwapChain() failed." << endl;
         return false;
     }
-
+   
     // CreateRenderTarget
-    ID3D11Texture2D *pBackBuffer;
-    m_swapChain->GetBuffer(0, IID_PPV_ARGS(&pBackBuffer)); // 0번째 버퍼를 pBack에 저장
-    if (pBackBuffer) {
-        m_device->CreateRenderTargetView(pBackBuffer, NULL, &m_renderTargetView);
-        pBackBuffer->Release(); // GetBuffer에서 AddRef가 발생하기 때문에 릴리즈
-    } else {
-        cout << "CreateRenderTargetView() failed." << endl;
-        return false;
-    }
-
+ 
+    CreateBuffers();
     // Set the viewport
     ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
     m_screenViewport.TopLeftX = 0;
@@ -436,37 +428,6 @@ bool EngineBase::InitDirect3D() {
 
     m_device->CreateRasterizerState(&rastDesc, &m_rasterizerSate);
 
-    // Create depth buffer
-
-    D3D11_TEXTURE2D_DESC depthStencilBufferDesc;
-    depthStencilBufferDesc.Width = m_screenWidth;
-    depthStencilBufferDesc.Height = m_screenHeight;
-    depthStencilBufferDesc.MipLevels = 1;
-    depthStencilBufferDesc.ArraySize = 1;
-    depthStencilBufferDesc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
-    if (numQualityLevels > 0) {
-        depthStencilBufferDesc.SampleDesc.Count = 4; // how many multisamples
-        depthStencilBufferDesc.SampleDesc.Quality = numQualityLevels - 1;
-    } else {
-        depthStencilBufferDesc.SampleDesc.Count = 1; // how many multisamples
-        depthStencilBufferDesc.SampleDesc.Quality = 0;
-    }
-    depthStencilBufferDesc.Usage = D3D11_USAGE_DEFAULT;
-    depthStencilBufferDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-    depthStencilBufferDesc.CPUAccessFlags = 0;
-    depthStencilBufferDesc.MiscFlags = 0;
-
-    if (FAILED(m_device->CreateTexture2D(&depthStencilBufferDesc, 0,
-                                         m_depthStencilBuffer.GetAddressOf()))) {
-        cout << "CreateTexture2D() failed." << endl;
-    }
-    if (FAILED(
-            m_device->CreateDepthStencilView(m_depthStencilBuffer.Get(), 0, &m_depthStencilView))) {
-        cout << "CreateDepthStencilView() failed." << endl;
-    }
-
-    // Create depth stencil state
-
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
     ZeroMemory(&depthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
     depthStencilDesc.DepthEnable = true; // false
@@ -476,7 +437,7 @@ bool EngineBase::InitDirect3D() {
                                                  m_depthStencilState.GetAddressOf()))) {
         cout << "CreateDepthStencilState() failed." << endl;
     }
-
+    
     return true;
 }
 
@@ -508,5 +469,57 @@ bool EngineBase::InitGUI() {
 // 의미합니다.
 // String and character literals (C++)
 // https://learn.microsoft.com/en-us/cpp/cpp/string-and-character-literals-cpp?view=msvc-170
+void EngineBase::CreateBuffers() {
 
+    // 레스터화 -> float/depthBuffer(MSAA) -> resolved -> backBuffer
+
+    // BackBuffer는 화면으로 최종 출력되기 때문에  RTV만 필요하고 SRV는 불필요
+    ComPtr<ID3D11Texture2D> backBuffer;
+    ThrowIfFailed(m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf())));
+    ThrowIfFailed(
+        m_device->CreateRenderTargetView(backBuffer.Get(), NULL, m_backBufferRTV.GetAddressOf()));
+
+    // FLOAT MSAA RenderTargetView/ShaderResourceView
+    ThrowIfFailed(m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_R16G16B16A16_FLOAT, 4,
+                                                          &m_numQualityLevels));
+
+    D3D11_TEXTURE2D_DESC desc;
+    backBuffer->GetDesc(&desc);
+    desc.MipLevels = desc.ArraySize = 1;
+    desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;  // 그리기 + 읽기 둘 다 가능
+    desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; // HDR 포맷
+    desc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
+    desc.MiscFlags = 0;
+    desc.CPUAccessFlags = 0;
+    if (m_useMSAA && m_numQualityLevels) {
+        desc.SampleDesc.Count = 4;
+        desc.SampleDesc.Quality = m_numQualityLevels - 1;
+    } else {
+        desc.SampleDesc.Count = 1;
+        desc.SampleDesc.Quality = 0;
+    }
+
+    ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL, m_floatBuffer.GetAddressOf()));
+
+    ThrowIfFailed(
+        m_device->CreateShaderResourceView(m_floatBuffer.Get(), NULL, m_floatSRV.GetAddressOf()));
+
+    ThrowIfFailed(
+        m_device->CreateRenderTargetView(m_floatBuffer.Get(), NULL, m_floatRTV.GetAddressOf()));
+
+    D3D11Utils::CreateDepthBuffer(m_device, m_screenWidth, m_screenHeight,
+                                  UINT(m_useMSAA ? m_numQualityLevels : 0), m_depthStencilView);
+
+    // FLOAT MSAA를 Relsolve해서 저장할 SRV/RTV
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL, m_resolvedBuffer.GetAddressOf()));
+    ThrowIfFailed(m_device->CreateShaderResourceView(m_resolvedBuffer.Get(), NULL,
+                                                     m_resolvedSRV.GetAddressOf()));
+    ThrowIfFailed(m_device->CreateRenderTargetView(m_resolvedBuffer.Get(), NULL,
+                                                   m_resolvedRTV.GetAddressOf()));
+
+    m_postProcess.Initialize(m_device, m_context, {m_resolvedSRV}, {m_backBufferRTV}, m_screenWidth,
+                             m_screenHeight, 4);
+}
 } // namespace hlab

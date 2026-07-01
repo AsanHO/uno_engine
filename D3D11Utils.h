@@ -32,6 +32,10 @@ inline void ThrowIfFailed(HRESULT hr) {
 
 class D3D11Utils {
   public:
+    static void CreateDepthBuffer(ComPtr<ID3D11Device> &device, int screenWidth, int screenHeight,
+                                  UINT numQualityLevels,
+                                  ComPtr<ID3D11DepthStencilView> &depthStencilView);
+
     static void
     CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device> &device, const wstring &filename,
                                      const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,

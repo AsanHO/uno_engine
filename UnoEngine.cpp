@@ -97,15 +97,15 @@ void UnoEngine::Render() {
     m_context->RSSetViewports(1, &m_screenViewport);
 
     float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-    m_context->ClearRenderTargetView(m_renderTargetView.Get(), clearColor);
+    m_context->ClearRenderTargetView(m_backBufferRTV.Get(), clearColor);
 
     m_context->ClearDepthStencilView(m_depthStencilView.Get(),
                                      D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
     // 비교: Depth Buffer를 사용하지 않는 경우
-    // m_context->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), nullptr);
+    // m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), nullptr);
 
-    m_context->OMSetRenderTargets(1, m_renderTargetView.GetAddressOf(), m_depthStencilView.Get());
+    m_context->OMSetRenderTargets(1, m_backBufferRTV.GetAddressOf(), m_depthStencilView.Get());
 
     m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
     m_cubeMapping.Render(m_context, false);

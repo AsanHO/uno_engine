@@ -3,7 +3,7 @@
 #include <directxtk/SimpleMath.h>
 #include <string>
 #include <vector>
-
+ 
 #include "Vertex.h"
 
 namespace hlab {

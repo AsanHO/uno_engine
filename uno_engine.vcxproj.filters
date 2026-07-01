@@ -8,6 +8,10 @@
     <FxCompile Include="NormalGS.hlsl" />
     <FxCompile Include="NormalVS.hlsl" />
     <FxCompile Include="NormalPS.hlsl" />
+    <FxCompile Include="SamplingVS.hlsl" />
+    <FxCompile Include="CombinePS.hlsl" />
+    <FxCompile Include="BloomDownPS.hlsl" />
+    <FxCompile Include="BloomUpPS.hlsl" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp">
