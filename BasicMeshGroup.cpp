@@ -31,12 +31,12 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Devic
     device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
 
     // ConstantBuffer 만들기
-    m_basicVertexConstantData.modelWorld = Matrix();
-    m_basicVertexConstantData.view = Matrix();
-    m_basicVertexConstantData.projection = Matrix();
+    m_basicVertexConstData.modelWorld = Matrix();
+    m_basicVertexConstData.view = Matrix();
+    m_basicVertexConstData.projection = Matrix();
 
-    D3D11Utils::CreateConstantBuffer(device, m_basicVertexConstantData, m_vertexConstantBuffer);
-    D3D11Utils::CreateConstantBuffer(device, m_basicPixelConstantData, m_pixelConstantBuffer);
+    D3D11Utils::CreateConstantBuffer(device, m_basicVertexConstData, m_vertexConstantBuffer);
+    D3D11Utils::CreateConstantBuffer(device, m_basicPixelConstData, m_pixelConstantBuffer);
 
     for (const auto &meshData : meshes) {
         auto newMesh = std::make_shared<Mesh>();
@@ -111,9 +111,9 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Devic
 void BasicMeshGroup::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
                                            ComPtr<ID3D11DeviceContext> &context) {
 
-    D3D11Utils::UpdateBuffer(device, context, m_basicVertexConstantData, m_vertexConstantBuffer);
+    D3D11Utils::UpdateBuffer(device, context, m_basicVertexConstData, m_vertexConstantBuffer);
 
-    D3D11Utils::UpdateBuffer(device, context, m_basicPixelConstantData, m_pixelConstantBuffer);
+    D3D11Utils::UpdateBuffer(device, context, m_basicPixelConstData, m_pixelConstantBuffer);
 
     // 노멀 벡터 그리기
     if (m_drawNormals && m_drawNormalsDirtyFlag) {
@@ -185,7 +185,7 @@ void BasicMeshGroup::UpdateModelWorld(const Matrix &modelWorldRow) {
     m_invTransposeRow.Translation(Vector3(0.0f));
     m_invTransposeRow = m_invTransposeRow.Invert().Transpose();
 
-    m_basicVertexConstantData.modelWorld = modelWorldRow.Transpose();
-    m_basicVertexConstantData.invTranspose = m_invTransposeRow.Transpose();
+    m_basicVertexConstData.modelWorld = modelWorldRow.Transpose();
+    m_basicVertexConstData.invTranspose = m_invTransposeRow.Transpose();
 }
 } // namespace hlab

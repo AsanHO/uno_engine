@@ -33,8 +33,8 @@ class BasicMeshGroup {
     Matrix m_invTransposeRow = Matrix();
     
     // ExampleApp::Update()에서 접근
-    BasicVertexConstantData m_basicVertexConstantData;
-    BasicPixelConstantData m_basicPixelConstantData;
+    BasicVertexConstantData m_basicVertexConstData;
+    BasicPixelConstantData m_basicPixelConstData;
 
     // ExampleApp:Initialize()에서 접근
     ComPtr<ID3D11ShaderResourceView> m_irradianceSRV;

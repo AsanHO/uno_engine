@@ -30,10 +30,14 @@ struct BasicPixelConstantData {
     Material material;         // 48
     Light lights[MAX_LIGHTS];  // 48 * MAX_LIGHTS
     Vector4 indexColor;        // 피킹(Picking)에 사용
-    int useTexture = 0;        // 4
-    int useNormalMap = 1;      // 4
-    int useAOMap = 1;          // 4, Ambient Occlusion
-    int reverseNormalMapY = 0; // 4
+    int useAlbedoMap = 0;      // 4
+    int useNormalMap = 0;      // 4
+    int useAOMap = 0;          // 4, Ambient Occlusion
+    int invertNormalMapY = 0;  // 4
+    int useMetallicMap = 0;
+    int useRoughnessMap = 0;
+    float expose = 1.0f;
+    float gamma = 1.0f;
 };
 
 static_assert((sizeof(BasicPixelConstantData) % 16) == 0,

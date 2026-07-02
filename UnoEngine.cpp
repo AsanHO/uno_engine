@@ -34,7 +34,7 @@ bool UnoEngine::Initialize() {
 
         sphere.heightTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
                                        "grey_porous_rock_40_56_height.jpg";
-        m_mainSphere.m_basicPixelConstantData.reverseNormalMapY = true;
+        m_mainSphere.m_basicPixelConstData.invertNormalMapY = true;
 
         sphere.aoTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
                                    "grey_porous_rock_40_56_ao.jpg";
@@ -50,11 +50,11 @@ bool UnoEngine::Initialize() {
         m_mainSphere.m_specularSRV = m_cubeMapping.m_specularSRV;
         m_mainSphere.m_brdfSRV = m_cubeMapping.m_brdfSRV;
         m_mainSphere.UpdateModelWorld(Matrix::CreateTranslation(center));
-        m_mainSphere.m_basicPixelConstantData.useTexture = true;
+        m_mainSphere.m_basicPixelConstData.useAlbedoMap = true;
 
         /*m_mainSphere.m_basicPixelConstantData.material.diffuse = Vector3(1.0f);
         m_mainSphere.m_basicPixelConstantData.material.specular = Vector3(0.0f);*/
-        m_mainSphere.m_basicPixelConstantData.indexColor = Vector4(1.0f, 0.0, 0.0, 0.0);
+        m_mainSphere.m_basicPixelConstData.indexColor = Vector4(1.0f, 0.0, 0.0, 0.0);
         m_mainSphere.UpdateConstantBuffers(m_device, m_context);
 
         // 동일한 크기와 위치에 BoundingSphere 만들기
@@ -80,9 +80,9 @@ void UnoEngine::Update(float dt) {
     m_cubeMapping.UpdateViewProjConstBuffer(m_device, m_context, viewRow, projRow);
 
     using namespace DirectX;
-    m_mainSphere.m_basicVertexConstantData.view = viewRow.Transpose();
-    m_mainSphere.m_basicVertexConstantData.projection = projRow.Transpose();
-    m_mainSphere.m_basicPixelConstantData.eyeWorld = eyeWorld;
+    m_mainSphere.m_basicVertexConstData.view = viewRow.Transpose();
+    m_mainSphere.m_basicVertexConstData.projection = projRow.Transpose();
+    m_mainSphere.m_basicPixelConstData.eyeWorld = eyeWorld;
     m_mainSphere.UpdateConstantBuffers(m_device, m_context);
 }
 
@@ -139,6 +139,36 @@ void UnoEngine::UpdateGUI() {
         if (flag) {
             m_postProcess.m_combineFilter.UpdateConstantBuffers(m_device, m_context);
         }
+        ImGui::TreePop();
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::TreeNode("Material")) {
+
+        int flag = 0;
+
+        flag += ImGui::SliderFloat(
+            "Metallic", &m_mainSphere.m_basicPixelConstData.material.metallic, 0.0f, 1.0f);
+        flag += ImGui::SliderFloat(
+            "Roughness", &m_mainSphere.m_basicPixelConstData.material.roughness, 0.0f, 1.0f);
+        flag += ImGui::CheckboxFlags("AlbedoTexture",
+                                     &m_mainSphere.m_basicPixelConstData.useAlbedoMap, 1);
+        flag += ImGui::CheckboxFlags("Use NormalMapping",
+                                     &m_mainSphere.m_basicPixelConstData.useNormalMap, 1);
+        flag += ImGui::CheckboxFlags("Use AO", &m_mainSphere.m_basicPixelConstData.useAOMap, 1);
+        flag += ImGui::CheckboxFlags("Use HeightMapping",
+                                     &m_mainSphere.m_basicVertexConstData.useHeightMap, 1);
+        flag += ImGui::SliderFloat("HeightScale", &m_mainSphere.m_basicVertexConstData.heightScale,
+                                   0.0f, 0.1f);
+        flag += ImGui::CheckboxFlags("Use MetallicMap",
+                                     &m_mainSphere.m_basicPixelConstData.useMetallicMap, 1);
+        flag += ImGui::CheckboxFlags("Use RoughnessMap",
+                                     &m_mainSphere.m_basicPixelConstData.useRoughnessMap, 1);
+        flag += ImGui::Checkbox("Draw Normals", &m_mainSphere.m_drawNormals);
+
+        if (flag) {
+            // GUI 입력이 있을 때만 할 일들 추가
+        }
+
         ImGui::TreePop();
     }
 }
