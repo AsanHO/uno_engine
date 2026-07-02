@@ -107,7 +107,11 @@ void UnoEngine::Render() {
     m_context->OMSetRenderTargets(UINT(renderTargetViews.size()), renderTargetViews.data(),
                                   m_depthStencilView.Get());
     m_context->OMSetDepthStencilState(m_depthStencilState.Get(), 0);
-    
+    if (m_isDrawAsWire) {
+        m_context->RSSetState(m_wireRasterizerState.Get());
+    } else {
+        m_context->RSSetState(m_solidRasterizerState.Get());
+    }
     m_cubeMapping.Render(m_context, false);
     m_mainSphere.Render(m_context);
     // m_float
@@ -118,7 +122,11 @@ void UnoEngine::Render() {
 }
 
 void UnoEngine::UpdateGUI() {
-    ImGui::Checkbox("usePerspectiveProjection", &m_usePerspectiveProjection);
+    ImGui::SetNextItemOpen(false, ImGuiCond_Once);
+    if (ImGui::TreeNode("General")) {
+        ImGui::Checkbox("Wireframe", &m_isDrawAsWire);
+        ImGui::TreePop();
+    }
     if (ImGui::TreeNode("Post Processing")) {
         int flag = 0;
         flag += ImGui::SliderFloat("Bloom Strength",

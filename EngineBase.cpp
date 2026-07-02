@@ -426,8 +426,11 @@ bool EngineBase::InitDirect3D() {
     rastDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
     rastDesc.FrontCounterClockwise = true;
 
-    m_device->CreateRasterizerState(&rastDesc, &m_rasterizerSate);
+    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, &m_solidRasterizerState));
 
+    rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
+
+    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, &m_wireRasterizerState));
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
     ZeroMemory(&depthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
     depthStencilDesc.DepthEnable = true; // false

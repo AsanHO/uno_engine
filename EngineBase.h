@@ -60,7 +60,6 @@ class EngineBase {
     ComPtr<ID3D11Device> m_device;
     ComPtr<ID3D11DeviceContext> m_context;
     ComPtr<IDXGISwapChain> m_swapChain;
-    ComPtr<ID3D11RasterizerState> m_rasterizerSate;
 
     // Depth buffer 관련
     ComPtr<ID3D11Texture2D> m_depthStencilBuffer;
@@ -79,6 +78,12 @@ class EngineBase {
     ComPtr<ID3D11Texture2D> m_resolvedBuffer;
     ComPtr<ID3D11ShaderResourceView> m_resolvedSRV;
     ComPtr<ID3D11RenderTargetView> m_resolvedRTV;
+
+    //와이어프레임 옵션
+    bool m_isDrawAsWire = false;
+    ComPtr<ID3D11RasterizerState> m_solidRasterizerState;
+    ComPtr<ID3D11RasterizerState> m_wireRasterizerState;
+
 
     // MSAA 관련
     UINT m_numQualityLevels = 0;
