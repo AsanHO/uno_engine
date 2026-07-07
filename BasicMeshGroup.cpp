@@ -47,36 +47,36 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Devic
         D3D11Utils::CreateIndexBuffer(device, meshData.indices, newMesh->indexBuffer);
 
         if (!meshData.albedoTextureFilename.empty()) {
-
+            // TODO : 원래 true로 되어 있는  코드지만, 차이점을 알수 없어 우선 false로 구현
             std::cout << meshData.albedoTextureFilename << std::endl;
-            D3D11Utils::CreateTexture(device, context, meshData.albedoTextureFilename,
+            D3D11Utils::CreateTexture(device, context, meshData.albedoTextureFilename, true,
                                       newMesh->albedoTexture, newMesh->albedoSRV);
         }
 
         if (!meshData.normalTextureFilename.empty()) {
             std::cout << meshData.normalTextureFilename << std::endl;
-            D3D11Utils::CreateTexture(device, context, meshData.normalTextureFilename,
+            D3D11Utils::CreateTexture(device, context, meshData.normalTextureFilename, false,
                                       newMesh->normalTexture, newMesh->normalSRV);
         }
 
         if (!meshData.heightTextureFilename.empty()) {
             std::cout << meshData.heightTextureFilename << std::endl;
-            D3D11Utils::CreateTexture(device, context, meshData.heightTextureFilename,
+            D3D11Utils::CreateTexture(device, context, meshData.heightTextureFilename, false,
                                       newMesh->heightTexture, newMesh->heightSRV);
         }
 
         if (!meshData.aoTextureFilename.empty()) {
             std::cout << meshData.aoTextureFilename << std::endl;
-            D3D11Utils::CreateTexture(device, context, meshData.aoTextureFilename,
+            D3D11Utils::CreateTexture(device, context, meshData.aoTextureFilename, false,
                                       newMesh->aoTexture, newMesh->aoSRV);
         }
         if (!meshData.metallicTextureFilename.empty()) {
-            D3D11Utils::CreateTexture(device, context, meshData.metallicTextureFilename,
+            D3D11Utils::CreateTexture(device, context, meshData.metallicTextureFilename, false,
                                       newMesh->metallicTexture, newMesh->metallicSRV);
         }
 
         if (!meshData.roughnessTextureFilename.empty()) {
-            D3D11Utils::CreateTexture(device, context, meshData.roughnessTextureFilename,
+            D3D11Utils::CreateTexture(device, context, meshData.roughnessTextureFilename, false,
                                       newMesh->roughnessTexture, newMesh->roughnessSRV);
         }
         newMesh->vertexConstantBuffer = m_vertexConstantBuffer;

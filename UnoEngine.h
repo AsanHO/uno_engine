@@ -31,6 +31,7 @@ class UnoEngine : public EngineBase {
 
   protected:
     BasicMeshGroup m_mainSphere;
+    BasicMeshGroup m_mainSphere2;
     CubeMapping m_cubeMapping;
 
     bool m_usePerspectiveProjection = true;

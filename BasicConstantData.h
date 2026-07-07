@@ -29,7 +29,7 @@ struct BasicPixelConstantData {
     float mipmapLevel = 0.0f;  // 4
     Material material;         // 48
     Light lights[MAX_LIGHTS];  // 48 * MAX_LIGHTS
-    Vector4 indexColor;        // 피킹(Picking)에 사용
+    //Vector4 indexColor;        // 피킹(Picking)에 사용
     int useAlbedoMap = 0;      // 4
     int useNormalMap = 0;      // 4
     int useAOMap = 0;          // 4, Ambient Occlusion

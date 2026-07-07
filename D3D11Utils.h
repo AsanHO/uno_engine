@@ -150,7 +150,8 @@ class D3D11Utils {
     }
 
     static void CreateTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-                              const std::string filename, ComPtr<ID3D11Texture2D> &texture,
+                              const std::string filename, const bool usSRGB,
+                              ComPtr<ID3D11Texture2D> &texture,
                               ComPtr<ID3D11ShaderResourceView> &textureResourceView);
 
     static void CreateMetallicRoughnessTexture(ComPtr<ID3D11Device> &device,

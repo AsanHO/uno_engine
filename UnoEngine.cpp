@@ -28,9 +28,9 @@ bool UnoEngine::Initialize() {
         // PBR textures
         sphere.albedoTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
                                        "grey_porous_rock_40_56_diffuse.jpg";
-
-        sphere.normalTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
-                                       "grey_porous_rock_40_56_normal.jpg";
+        sphere.normalTextureFilename =
+                "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
+                "grey_porous_rock_40_56_normal.jpg";
 
         sphere.heightTextureFilename = "./Assets/Textures/PBR/cgaxis_grey_porous_rock_40_56_4K/"
                                        "grey_porous_rock_40_56_height.jpg";
@@ -50,11 +50,11 @@ bool UnoEngine::Initialize() {
         m_mainSphere.m_specularSRV = m_cubeMapping.m_specularSRV;
         m_mainSphere.m_brdfSRV = m_cubeMapping.m_brdfSRV;
         m_mainSphere.UpdateModelWorld(Matrix::CreateTranslation(center));
-        m_mainSphere.m_basicPixelConstData.useAlbedoMap = true;
+        //m_mainSphere.m_basicPixelConstData.useAlbedoMap = true;
 
         /*m_mainSphere.m_basicPixelConstantData.material.diffuse = Vector3(1.0f);
         m_mainSphere.m_basicPixelConstantData.material.specular = Vector3(0.0f);*/
-        m_mainSphere.m_basicPixelConstData.indexColor = Vector4(1.0f, 0.0, 0.0, 0.0);
+        //m_mainSphere.m_basicPixelConstData.indexColor = Vector4(1.0f, 0.0, 0.0, 0.0);
         m_mainSphere.UpdateConstantBuffers(m_device, m_context);
 
         // 동일한 크기와 위치에 BoundingSphere 만들기

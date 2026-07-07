@@ -196,43 +196,43 @@ void D3D11Utils::CreateGeometryShader(ComPtr<ID3D11Device> &device, const wstrin
                                  &geometryShader);
 }
 
-//void ReadEXRImage(const std::string filename, std::vector<uint8_t> &image, int &width, int &height,
-//                  DXGI_FORMAT &pixelFormat) {
-//
-//    const std::wstring wFilename(filename.begin(), filename.end());
-//
-//    TexMetadata metadata;
-//    ThrowIfFailed(GetMetadataFromEXRFile(wFilename.c_str(), metadata));
-//
-//    ScratchImage scratchImage;
-//    ThrowIfFailed(LoadFromEXRFile(wFilename.c_str(), NULL, scratchImage));
-//
-//    width = static_cast<int>(metadata.width);
-//    height = static_cast<int>(metadata.height);
-//    pixelFormat = metadata.format;
-//
-//    cout << filename << " " << metadata.width << " " << metadata.height << metadata.format << endl;
-//
-//    image.resize(scratchImage.GetPixelsSize());
-//    memcpy(image.data(), scratchImage.GetPixels(), image.size());
-//
-//    // 데이터 범위 확인해보기
-//    vector<float> f32(image.size() / 2);
-//    uint16_t *f16 = (uint16_t *)image.data();
-//    for (int i = 0; i < image.size() / 2; i++) {
-//        f32[i] = fp16_ieee_to_fp32_value(f16[i]);
-//    }
-//
-//    const float minValue = *std::min_element(f32.begin(), f32.end());
-//    const float maxValue = *std::max_element(f32.begin(), f32.end());
-//
-//    cout << minValue << " " << maxValue << endl;
-//
-//    // f16 = (uint16_t *)image.data();
-//    // for (int i = 0; i < image.size() / 2; i++) {
-//    //     f16[i] = fp16_ieee_from_fp32_value(f32[i] * 2.0f);
-//    // }
-//}
+void ReadEXRImage(const std::string filename, std::vector<uint8_t> &image, int &width, int &height,
+                  DXGI_FORMAT &pixelFormat) {
+
+    const std::wstring wFilename(filename.begin(), filename.end());
+
+    TexMetadata metadata;
+    ThrowIfFailed(GetMetadataFromEXRFile(wFilename.c_str(), metadata));
+
+    ScratchImage scratchImage;
+    ThrowIfFailed(LoadFromEXRFile(wFilename.c_str(), NULL, scratchImage));
+
+    width = static_cast<int>(metadata.width);
+    height = static_cast<int>(metadata.height);
+    pixelFormat = metadata.format;
+
+    cout << filename << " " << metadata.width << " " << metadata.height << metadata.format << endl;
+
+    image.resize(scratchImage.GetPixelsSize());
+    memcpy(image.data(), scratchImage.GetPixels(), image.size());
+
+    // 데이터 범위 확인해보기
+    vector<float> f32(image.size() / 2);
+    uint16_t *f16 = (uint16_t *)image.data();
+    for (int i = 0; i < image.size() / 2; i++) {
+        f32[i] = fp16_ieee_to_fp32_value(f16[i]);
+    }
+
+    const float minValue = *std::min_element(f32.begin(), f32.end());
+    const float maxValue = *std::max_element(f32.begin(), f32.end());
+
+    cout << minValue << " " << maxValue << endl;
+
+     f16 = (uint16_t *)image.data();
+     for (int i = 0; i < image.size() / 2; i++) {
+         f16[i] = fp16_ieee_from_fp32_value(f32[i] * 2.0f);
+     }
+}
 
 void ReadImage(const std::string filename, std::vector<uint8_t> &image, int &width, int &height) {
 
@@ -410,16 +410,24 @@ ComPtr<ID3D11Texture2D> CreateStagingTexture(ComPtr<ID3D11Device> &device,
 //}
 
 void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-                               const std::string filename, ComPtr<ID3D11Texture2D> &texture,
+                               const std::string filename, const bool usSRGB,
+                               ComPtr<ID3D11Texture2D> &texture,
                                ComPtr<ID3D11ShaderResourceView> &textureResourceView) {
-    // const bool usSRGB 파라미터로 들어가 있었음
-
-    //DXGI_FORMAT pixelFormat = usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
 
     int width, height;
     std::vector<uint8_t> image;
 
-    ReadImage(filename, image, width, height);
+    DXGI_FORMAT pixelFormat = usSRGB ? DXGI_FORMAT_R8G8B8A8_UNORM_SRGB : DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    string ext(filename.end() - 3, filename.end());
+    std::transform(ext.begin(), ext.end(), ext.begin(), std::tolower);
+
+    if (ext == "exr") {
+        ReadEXRImage(filename, image, width, height, pixelFormat);
+    } else {
+        ReadImage(filename, image, width, height);
+    }
+
 
     // 스테이징 텍스춰 만들고 CPU에서 이미지를 복사합니다.
     ComPtr<ID3D11Texture2D> stagingTexture =
@@ -432,7 +440,7 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Device
     txtDesc.Height = height;
     txtDesc.MipLevels = 0; // 밉맵 레벨 최대
     txtDesc.ArraySize = 1;
-    txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    txtDesc.Format = pixelFormat;
     txtDesc.SampleDesc.Count = 1;
     txtDesc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
     txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
