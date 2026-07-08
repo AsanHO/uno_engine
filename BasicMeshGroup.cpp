@@ -29,7 +29,10 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Devic
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D11_FLOAT32_MAX;
     device->CreateSamplerState(&sampDesc, m_samplerState.GetAddressOf());
-
+    sampDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
+    sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+    device->CreateSamplerState(&sampDesc, m_clampSamplerState.GetAddressOf());
     // ConstantBuffer ¸¸µé±â
     m_basicVertexConstData.modelWorld = Matrix();
     m_basicVertexConstData.view = Matrix();

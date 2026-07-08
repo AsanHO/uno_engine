@@ -54,7 +54,7 @@ class BasicMeshGroup {
     ComPtr<ID3D11InputLayout> m_basicInputLayout;
 
     ComPtr<ID3D11SamplerState> m_samplerState;
-
+    ComPtr<ID3D11SamplerState> m_clampSamplerState;
     ComPtr<ID3D11Buffer> m_vertexConstantBuffer;
     ComPtr<ID3D11Buffer> m_pixelConstantBuffer;
 
