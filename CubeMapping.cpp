@@ -58,7 +58,7 @@ void CubeMapping::UpdateViewProjConstBuffer(ComPtr<ID3D11Device> &device,
                                             const Matrix &viewRowInput, const Matrix &projRow) {
 
     Matrix viewRow = viewRowInput;
-    viewRow.Translation(Vector3(0.0f)); // 이동 취소
+    viewRow.Translation(Vector3(0.0f)); // 이동 취소 -> 큐브맵의 위치를 카메라의 원점으로 이동시킴
 
     this->m_viewProjConstData.viewProj = (viewRow * projRow).Transpose();
     //this->m_mirrorViewProjConstData.viewProj = (reflRow * viewRow * projRow).Transpose();
