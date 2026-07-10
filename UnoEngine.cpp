@@ -78,7 +78,13 @@ void UnoEngine::Update(float dt) {
 
     // 큐브 매핑 Constant Buffer 업데이트
     m_cubeMapping.UpdateViewProjConstBuffer(m_device, m_context, viewRow, projRow);
+    // 포인트 라이트 효과
+    Light pointLight;
+    pointLight.position = m_lightPosition;
+    pointLight.strength = Vector3(1.0f); // Strength
+    pointLight.fallOffEnd = 20.0f;
 
+    m_mainSphere.m_basicPixelConstData.lights[1] = pointLight;
     using namespace DirectX;
     m_mainSphere.m_basicVertexConstData.view = viewRow.Transpose();
     m_mainSphere.m_basicVertexConstData.projection = projRow.Transpose();
@@ -127,6 +133,17 @@ void UnoEngine::UpdateGUI() {
         ImGui::Checkbox("Wireframe", &m_isDrawAsWire);
         ImGui::TreePop();
     }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::TreeNode("Skybox")) {
+        ImGui::SliderFloat("Strength", &m_globalConstsCPU.strengthIBL, 0.0f, 5.0f);
+        ImGui::RadioButton("Env", &m_globalConstsCPU.textureToDraw, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Specular", &m_globalConstsCPU.textureToDraw, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Irradiance", &m_globalConstsCPU.textureToDraw, 2);
+        ImGui::SliderFloat("EnvLodBias", &m_globalConstsCPU.envLodBias, 0.0f, 10.0f);
+        ImGui::TreePop();
+    }
     if (ImGui::TreeNode("Post Processing")) {
         int flag = 0;
         flag += ImGui::SliderFloat("Bloom Strength",
@@ -139,6 +156,11 @@ void UnoEngine::UpdateGUI() {
         if (flag) {
             m_postProcess.m_combineFilter.UpdateConstantBuffers(m_device, m_context);
         }
+        ImGui::TreePop();
+    }
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::TreeNode("Point Light")) {
+        ImGui::SliderFloat3("Position", &m_lightPosition.x, -5.0f, 5.0f);
         ImGui::TreePop();
     }
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);

@@ -34,6 +34,8 @@ class UnoEngine : public EngineBase {
     BasicMeshGroup m_mainSphere2;
     CubeMapping m_cubeMapping;
 
+    Vector3 m_lightPosition = Vector3(0.0f, 1.0f, 0.0f);
+
     bool m_usePerspectiveProjection = true;
 };
 } // namespace hlab
