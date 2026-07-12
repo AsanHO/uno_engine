@@ -134,7 +134,7 @@ void UnoEngine::UpdateGUI() {
         ImGui::TreePop();
     }
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::TreeNode("Skybox")) {
+ /*   if (ImGui::TreeNode("Skybox")) {
         ImGui::SliderFloat("Strength", &m_globalConstsCPU.strengthIBL, 0.0f, 5.0f);
         ImGui::RadioButton("Env", &m_globalConstsCPU.textureToDraw, 0);
         ImGui::SameLine();
@@ -143,7 +143,7 @@ void UnoEngine::UpdateGUI() {
         ImGui::RadioButton("Irradiance", &m_globalConstsCPU.textureToDraw, 2);
         ImGui::SliderFloat("EnvLodBias", &m_globalConstsCPU.envLodBias, 0.0f, 10.0f);
         ImGui::TreePop();
-    }
+    }*/
     if (ImGui::TreeNode("Post Processing")) {
         int flag = 0;
         flag += ImGui::SliderFloat("Bloom Strength",
