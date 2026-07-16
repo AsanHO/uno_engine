@@ -30,12 +30,20 @@ class UnoEngine : public EngineBase {
     virtual void Render() override;
 
   protected:
-    BasicMeshGroup m_mainSphere;
-    BasicMeshGroup m_mainSphere2;
+    shared_ptr<BasicMeshGroup> m_mainSphere;
+    shared_ptr<BasicMeshGroup> m_mainSphere2;
     CubeMapping m_cubeMapping;
 
     Vector3 m_lightPosition = Vector3(0.0f, 1.0f, 0.0f);
 
     bool m_usePerspectiveProjection = true;
+
+    // 거울 (신규)
+    shared_ptr<BasicMeshGroup> m_mirror;
+    DirectX::SimpleMath::Plane m_mirrorPlane;
+    float m_mirrorAlpha = 0.5f;
+
+    // 거울 제외 물체 리스트 (신규)
+    vector<shared_ptr<BasicMeshGroup>> m_basicList;
 };
 } // namespace hlab

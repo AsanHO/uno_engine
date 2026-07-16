@@ -17,7 +17,8 @@ class BasicMeshGroup {
 
     void UpdateConstantBuffers(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context);
 
-    void Render(ComPtr<ID3D11DeviceContext> &context);
+    void Render(ComPtr<ID3D11DeviceContext> &context, ComPtr<ID3D11Buffer> &eyeViewProjConstBuffer,
+                bool useEnv);
 
     void UpdateModelWorld(const Matrix &modelToWorldRow);
 

@@ -11,11 +11,16 @@ using DirectX::SimpleMath::Matrix;
 using DirectX::SimpleMath::Vector2;
 using DirectX::SimpleMath::Vector3;
 
+struct EyeViewProjConstData {
+    // View와 Proj를 미리 곱한 형태
+    Matrix viewProj;
+    Vector3 eyeWorld; // Eye도 분리 가능
+    float dummy;
+};
+
 struct BasicVertexConstantData {
     Matrix modelWorld;
     Matrix invTranspose;
-    Matrix view;
-    Matrix projection;
     int useHeightMap = 1;
     float heightScale = 0.0f;
     Vector2 dummy;
@@ -25,19 +30,21 @@ static_assert((sizeof(BasicVertexConstantData) % 16) == 0,
               "Constant Buffer size must be 16-byte aligned");
 
 struct BasicPixelConstantData {
-    Vector3 eyeWorld;          // 12
-    float mipmapLevel = 0.0f;  // 4
-    Material material;         // 48
-    Light lights[MAX_LIGHTS];  // 48 * MAX_LIGHTS
-    //Vector4 indexColor;        // 피킹(Picking)에 사용
-    int useAlbedoMap = 0;      // 4
-    int useNormalMap = 0;      // 4
-    int useAOMap = 0;          // 4, Ambient Occlusion
-    int invertNormalMapY = 0;  // 4
+    Material material;        // 48
+    Light lights[MAX_LIGHTS]; // 48 * MAX_LIGHTS
+
+    // 여러 옵션들에 uint 플래그 하나만 사용할 수도 있습니다.
+    int useAlbedoMap = 0;
+    int useNormalMap = 0;
+    int useAOMap = 0;         // Ambient Occlusion
+    int invertNormalMapY = 0; // 16
     int useMetallicMap = 0;
     int useRoughnessMap = 0;
-    float expose = 1.0f;
+    int useEmissiveMap = 0;
+    float expose = 1.0f; // 16
     float gamma = 1.0f;
+    float mipmapLevel = 0.0f;
+    Vector2 dummy; // 16
 };
 
 static_assert((sizeof(BasicPixelConstantData) % 16) == 0,

@@ -8,11 +8,17 @@ cbuffer BasicVertexConstantData : register(b0)
 {
     matrix modelWorld;
     matrix invTranspose;
-    matrix view;
-    matrix projection;
     int useHeightMap;
     float heightScale;
     float2 dummy;
+};
+
+// 여러 물체들이 공통으로 사용할 ConstData 분리
+cbuffer BasicPixelConstData : register(b1)
+{
+    matrix viewProj;
+    float3 eyeWorld;
+    float dummy1;
 };
 
 PixelShaderInput main(VertexShaderInput input)
@@ -50,8 +56,7 @@ PixelShaderInput main(VertexShaderInput input)
 
     output.posWorld = pos.xyz; // 월드 위치 따로 저장
 
-    pos = mul(pos, view);
-    pos = mul(pos, projection);
+    pos = mul(pos, viewProj);
 
     output.posProj = pos;
     output.texcoord = input.texcoord;

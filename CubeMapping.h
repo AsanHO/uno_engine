@@ -20,7 +20,7 @@ class CubeMapping {
 
     void UpdateViewProjConstBuffer(ComPtr<ID3D11Device> &device,
                                    ComPtr<ID3D11DeviceContext> &context, const Matrix &viewRow,
-                                   const Matrix &projRow);
+                                   const Matrix &projRow, const Matrix &reflRow = Matrix());
 
     void UpdatePixelConstBuffer(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context);
 

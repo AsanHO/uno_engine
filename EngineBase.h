@@ -12,7 +12,7 @@
 #include "Camera.h"
 //#include "D3D11Utils.h"
 #include "PostProcess.h"
-
+#include "BasicConstantData.h"
 namespace hlab {
 
 using Microsoft::WRL::ComPtr;
@@ -42,6 +42,8 @@ class EngineBase {
     virtual void OnMouseUp(WPARAM btnState, int x, int y){};
     /*virtual void OnMouseMove(WPARAM btnState, int x, int y);*/
 
+    void UpdateEyeViewProjBuffers(const Vector3 &eyeWorld, const Matrix &viewRow,
+                                  const Matrix &projRow, const Matrix &refl = Matrix());
   protected: // 상속 받은 클래스에서도 접근 가능
     bool InitMainWindow();
     bool InitDirect3D();
@@ -64,7 +66,10 @@ class EngineBase {
     // Depth buffer 관련
     ComPtr<ID3D11Texture2D> m_depthStencilBuffer;
     ComPtr<ID3D11DepthStencilView> m_depthStencilView;
-    ComPtr<ID3D11DepthStencilState> m_depthStencilState;
+    ComPtr<ID3D11DepthStencilState> m_drawDSS;       // 일반적으로 그리기
+    ComPtr<ID3D11DepthStencilState> m_maskDSS;       // 스텐실버퍼에 거울 위치 표시
+    ComPtr<ID3D11DepthStencilState> m_drawMaskedDSS; // 스텐실 표시된 곳(거울 안)에만 그리기
+    ComPtr<ID3D11BlendState> m_mirrorBS;
 
      // BackBuffer
     ComPtr<ID3D11RenderTargetView> m_backBufferRTV;
@@ -81,8 +86,10 @@ class EngineBase {
 
     //와이어프레임 옵션
     bool m_isDrawAsWire = false;
-    ComPtr<ID3D11RasterizerState> m_solidRasterizerState;
-    ComPtr<ID3D11RasterizerState> m_wireRasterizerState;
+    ComPtr<ID3D11RasterizerState> m_solidRS;
+    ComPtr<ID3D11RasterizerState> m_solidCCWRS; // Counter-ClockWise
+    ComPtr<ID3D11RasterizerState> m_wireRS;
+    ComPtr<ID3D11RasterizerState> m_wireCCWRS;
 
 
     // MSAA 관련
@@ -101,5 +108,15 @@ class EngineBase {
     bool m_keyPressed[256] = {
         false,
     };
+
+     // 거울 구현을 더 효율적으로 하기 위해 ConstBuffer들 분리
+    EyeViewProjConstData m_eyeViewProjConstData;
+    EyeViewProjConstData m_mirrorEyeViewProjConstData;
+    ComPtr<ID3D11Buffer> m_eyeViewProjConstBuffer;
+    ComPtr<ID3D11Buffer> m_mirrorEyeViewProjConstBuffer;
+
+    //others
+    int m_guiWidth = 0;   // GUI 패널이 화면 일부를 가릴 때 뷰포트 보정용 (거울과 무관)
+    bool m_useEnv = true; // 환경맵 on/off 토글
 };
 } // namespace hlab

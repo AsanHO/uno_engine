@@ -402,9 +402,9 @@ bool EngineBase::InitDirect3D() {
         cout << "D3D11CreateDeviceAndSwapChain() failed." << endl;
         return false;
     }
-   
+
     // CreateRenderTarget
- 
+
     CreateBuffers();
     // Set the viewport
     ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
@@ -418,29 +418,85 @@ bool EngineBase::InitDirect3D() {
 
     m_context->RSSetViewports(1, &m_screenViewport);
 
-    // Create a rasterizer state
+    //  -> Create a rasterizer state
     D3D11_RASTERIZER_DESC rastDesc;
     ZeroMemory(&rastDesc, sizeof(D3D11_RASTERIZER_DESC)); // Need this
     rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
-    // rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
-    rastDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_NONE;
-    rastDesc.FrontCounterClockwise = true;
+    rastDesc.CullMode = D3D11_CULL_MODE::D3D11_CULL_BACK;
+    rastDesc.FrontCounterClockwise = false;
 
-    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, &m_solidRasterizerState));
+    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, &m_solidRS));
 
     rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_WIREFRAME;
 
-    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, &m_wireRasterizerState));
+    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, &m_wireRS));
+
+    // 거울용
+    rastDesc.FillMode = D3D11_FILL_MODE::D3D11_FILL_SOLID;
+
+
+    rastDesc.FrontCounterClockwise = true; // CCW! 반사용
+    rastDesc.DepthClipEnable = true;
+    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, m_solidCCWRS.GetAddressOf()));
+
+    rastDesc.FillMode = D3D11_FILL_WIREFRAME;
+    ThrowIfFailed(m_device->CreateRasterizerState(&rastDesc, m_wireCCWRS.GetAddressOf()));
+
+    // 거울용 ConstBuffer 생성
+    D3D11Utils::CreateConstBuffer(m_device, m_eyeViewProjConstData, m_eyeViewProjConstBuffer);
+    D3D11Utils::CreateConstBuffer(m_device, m_mirrorEyeViewProjConstData,
+                                  m_mirrorEyeViewProjConstBuffer);
+    // <-Create a rasterizer state
+
     D3D11_DEPTH_STENCIL_DESC depthStencilDesc;
     ZeroMemory(&depthStencilDesc, sizeof(D3D11_DEPTH_STENCIL_DESC));
     depthStencilDesc.DepthEnable = true; // false
     depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK::D3D11_DEPTH_WRITE_MASK_ALL;
     depthStencilDesc.DepthFunc = D3D11_COMPARISON_FUNC::D3D11_COMPARISON_LESS_EQUAL;
-    if (FAILED(m_device->CreateDepthStencilState(&depthStencilDesc,
-                                                 m_depthStencilState.GetAddressOf()))) {
+    if (FAILED(m_device->CreateDepthStencilState(&depthStencilDesc, m_drawDSS.GetAddressOf()))) {
         cout << "CreateDepthStencilState() failed." << endl;
     }
-    
+    // m_maskDSS: 거울 위치를 Stencil에 1로 표시
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO; // Depth는 새로 안 씀
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS;            // 가려진 부분은 통과 못함
+    depthStencilDesc.StencilEnable = true;
+    depthStencilDesc.StencilReadMask = 0xFF;
+    depthStencilDesc.StencilWriteMask = 0xFF;
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE; // 통과하면 1로 표시
+    depthStencilDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+    depthStencilDesc.BackFace = depthStencilDesc.FrontFace;
+    m_device->CreateDepthStencilState(&depthStencilDesc, m_maskDSS.GetAddressOf());
+
+    // m_drawMaskedDSS: Stencil이 1인 곳(거울 안)에만 그리기
+    depthStencilDesc.DepthEnable = true;
+    depthStencilDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+    depthStencilDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL; // 주의: LESS_EQUAL
+    depthStencilDesc.StencilEnable = true;
+    depthStencilDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
+    depthStencilDesc.FrontFace.StencilFunc =
+        D3D11_COMPARISON_EQUAL; // Stencil==참조값(1)일 때만 통과
+    depthStencilDesc.BackFace = depthStencilDesc.FrontFace;
+    m_device->CreateDepthStencilState(&depthStencilDesc, m_drawMaskedDSS.GetAddressOf());
+
+    // m_mirrorBS: 거울 표면 반투명 블렌딩
+    D3D11_BLEND_DESC blendDesc;
+    ZeroMemory(&blendDesc, sizeof(blendDesc));
+    blendDesc.AlphaToCoverageEnable = true;
+    blendDesc.IndependentBlendEnable = false;
+    blendDesc.RenderTarget[0].BlendEnable = true;
+    blendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_INV_BLEND_FACTOR;
+    blendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_BLEND_FACTOR;
+    blendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+    m_device->CreateBlendState(&blendDesc, m_mirrorBS.GetAddressOf());
     return true;
 }
 
@@ -489,9 +545,10 @@ void EngineBase::CreateBuffers() {
     D3D11_TEXTURE2D_DESC desc;
     backBuffer->GetDesc(&desc);
     desc.MipLevels = desc.ArraySize = 1;
-    desc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;  // 그리기 + 읽기 둘 다 가능
-    desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT; // HDR 포맷
-    desc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
+    desc.BindFlags =
+        D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE; // 그리기 + 읽기 둘 다 가능
+    desc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;              // HDR 포맷
+    desc.Usage = D3D11_USAGE_DEFAULT;                          // 스테이징 텍스춰로부터 복사 가능
     desc.MiscFlags = 0;
     desc.CPUAccessFlags = 0;
     if (m_useMSAA && m_numQualityLevels) {
@@ -524,5 +581,18 @@ void EngineBase::CreateBuffers() {
 
     m_postProcess.Initialize(m_device, m_context, {m_resolvedSRV}, {m_backBufferRTV}, m_screenWidth,
                              m_screenHeight, 4);
+}
+
+void EngineBase::UpdateEyeViewProjBuffers(const Vector3 &eyeWorld, const Matrix &viewRow,
+                                          const Matrix &projRow, const Matrix &refl) {
+    m_eyeViewProjConstData.eyeWorld = eyeWorld;
+    m_eyeViewProjConstData.viewProj = (viewRow * projRow).Transpose();
+
+    m_mirrorEyeViewProjConstData.eyeWorld = eyeWorld;
+    m_mirrorEyeViewProjConstData.viewProj = (refl * viewRow * projRow).Transpose();
+
+    D3D11Utils::UpdateBuffer(m_device, m_context, m_eyeViewProjConstData, m_eyeViewProjConstBuffer);
+    D3D11Utils::UpdateBuffer(m_device, m_context, m_mirrorEyeViewProjConstData,
+                             m_mirrorEyeViewProjConstBuffer);
 }
 } // namespace hlab

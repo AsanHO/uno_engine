@@ -19,18 +19,26 @@ static const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
 
 cbuffer BasicPixelConstData : register(b0)
 {
-    float3 eyeWorld; // 카메라 위치
-    float mipmapLevel; // (현재 PS 코드에서는 안 쓰임)
-    Material material; // 재질 기본값 (텍스처 없을 때 사용)
-    Light light[MAX_LIGHTS]; // 조명 정보 배열
-    int useAlbedoMap; // 텍스처 사용 여부 플래그들
+    Material material;
+    Light light[MAX_LIGHTS];
+    int useAlbedoMap;
     int useNormalMap;
-    int useAOMap;
+    int useAOMap; // Ambient Occlusion
     int invertNormalMapY;
     int useMetallicMap;
     int useRoughnessMap;
-    float exposure; // (현재 PS 코드에서는 안 쓰임, CombinePS에서 쓰일 가능성)
-    float gamma; // (현재 PS 코드에서는 안 쓰임)
+    int useEmissiveMap;
+    float exposure;
+    float gamma;
+    float mipmapLevel;
+    float2 dummy0;
+};
+
+cbuffer BasicPixelConstData : register(b1)
+{
+    matrix viewProj;
+    float3 eyeWorld;
+    float dummy1;
 };
 
 float3 SchlickFresnel(float3 F0, float NdotH)

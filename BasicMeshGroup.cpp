@@ -35,8 +35,10 @@ void BasicMeshGroup::Initialize(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Devic
     device->CreateSamplerState(&sampDesc, m_clampSamplerState.GetAddressOf());
     // ConstantBuffer 만들기
     m_basicVertexConstData.modelWorld = Matrix();
-    m_basicVertexConstData.view = Matrix();
-    m_basicVertexConstData.projection = Matrix();
+
+    // eyeViewProjectionConstBuffer에 전역 버퍼를 지정했으므로 밑의 코드는 주석처리
+    /*m_basicVertexConstData.view = Matrix();
+    m_basicVertexConstData.projection = Matrix();*/
 
     D3D11Utils::CreateConstantBuffer(device, m_basicVertexConstData, m_vertexConstantBuffer);
     D3D11Utils::CreateConstantBuffer(device, m_basicPixelConstData, m_pixelConstantBuffer);
@@ -126,7 +128,8 @@ void BasicMeshGroup::UpdateConstantBuffers(ComPtr<ID3D11Device> &device,
     }
 }
 
-void BasicMeshGroup::Render(ComPtr<ID3D11DeviceContext> &context) {
+void BasicMeshGroup::Render(ComPtr<ID3D11DeviceContext> &context,
+                            ComPtr<ID3D11Buffer> &eyeViewProjConstBuffer, bool useEnv) {
     UINT stride = sizeof(Vertex);
     UINT offset = 0;
     for (const auto &mesh : m_meshes) {
@@ -135,20 +138,15 @@ void BasicMeshGroup::Render(ComPtr<ID3D11DeviceContext> &context) {
         // VertexShader에서도 Texture 사용
         context->VSSetShaderResources(0, 1, mesh->heightSRV.GetAddressOf());
         context->VSSetSamplers(0, 1, m_samplerState.GetAddressOf());
+        // b0: 기존 modelWorld/heightMap 등 (오브젝트 개별 정보)
         context->VSSetConstantBuffers(0, 1, mesh->vertexConstantBuffer.GetAddressOf());
+        // b1: 외부에서 주입된 카메라 시점 (일반 or 반사)
+        context->VSSetConstantBuffers(1, 1, eyeViewProjConstBuffer.GetAddressOf());
+        context->PSSetConstantBuffers(1, 1, eyeViewProjConstBuffer.GetAddressOf());
 
         context->PSSetSamplers(0, 1, m_samplerState.GetAddressOf());
         context->PSSetShader(m_basicPixelShader.Get(), 0, 0);
-        /*
-        TextureCube specularIBLTex : register(t0); //specular에 사용
-        TextureCube irradianceIBLTex : register(t1); //diffuse에 사용
-        Texture2D brdfTex : register(t2); //
-        Texture2D albedoTex : register(t3);
-        Texture2D normalTex : register(t4);
-        Texture2D aoTex : register(t5);
-        Texture2D metallicTex : register(t6);
-        Texture2D roughnessTex : register(t7);
-        */
+     
         // 물체 렌더링할 때 여러가지 텍스춰 사용
         vector<ID3D11ShaderResourceView *> resViews = {
             m_specularSRV.Get(),     m_irradianceSRV.Get(),   m_brdfSRV.Get(),
