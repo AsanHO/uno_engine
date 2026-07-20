@@ -140,8 +140,11 @@ void UnoEngine::Render() {
     m_context->OMSetBlendState(NULL, NULL, 0xffffffff);
 
     m_context->ClearDepthStencilView(m_depthStencilView.Get(),
-                                     D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 1);
-
+                                     D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f,
+                                     0); // 1과 0의 차이가 큼
+    // 0으로 하면   스텐실 버퍼가 모두 0으로 초기화됨
+    // 1로 하면   스텐실 버퍼가 모두 1로 초기화됨
+    // 0인 상태에서 drawDSS를 사용하면 스텐실 버퍼가 0인 곳만 그려짐
     m_context->OMSetDepthStencilState(m_drawDSS.Get(), 1);
 
     m_context->RSSetState(m_isDrawAsWire ? m_wireRS.Get() : m_solidRS.Get());
@@ -159,8 +162,8 @@ void UnoEngine::Render() {
     // 거울을 가리는 물체가 있을 수도 있어서 Depth는 CLEAR 안함
     // 앞 단계의 m_drawDSS에서 모두 KEEP을 사용했기 때문에
     // Stencil도 CLEAR 불필요
-     m_context->ClearDepthStencilView(m_depthStencilView.Get(),
-                                     D3D11_CLEAR_STENCIL, 1.0f, 0);
+    /*  m_context->ClearDepthStencilView(m_depthStencilView.Get(),
+                                      D3D11_CLEAR_STENCIL, 1.0f, 0);*/
 
     // 두 번째 UINT StencilRef = 1 사용
     // ClearDepthStencilView(..., 0)에서는 다른 숫자 0 사용
@@ -172,7 +175,7 @@ void UnoEngine::Render() {
 
     /* 거울 3. 거울 위치에 반사된 물체들을 렌더링 */
     // TODO:
-    //m_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+    m_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
     // TODO:
     m_context->OMSetDepthStencilState(m_drawMaskedDSS.Get(), 1);
 
