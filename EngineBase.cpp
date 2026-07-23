@@ -121,10 +121,7 @@ LRESULT EngineBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         if ((wParam & 0xfff0) == SC_KEYMENU) // Disable ALT application menu
             return 0;
         break;
-    /*case WM_MOUSEMOVE:
-        cout << "Mouse " << LOWORD(lParam) << " " << HIWORD(lParam) << endl;
-        OnMouseMove(wParam, LOWORD(lParam), HIWORD(lParam));
-        break;*/
+    
     case WM_INPUT: {
         UINT dataSize = 0;
 
@@ -143,16 +140,56 @@ LRESULT EngineBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             LONG dx = raw->data.mouse.lLastX;
             LONG dy = raw->data.mouse.lLastY;
             cout << dx << " " << dy << endl;
-            m_camera.UpdateMouse(static_cast<float>(dx), static_cast<float>(dy));
+            if (m_leftButton || m_rightButton) {
+                // 오브젝트 조작 모드: 가상 커서 누적
+                const float sensitivity = 0.7f; // 마우스 감도
+                m_virtualCursorX += float(dx) * sensitivity;
+                m_virtualCursorY += float(dy) * sensitivity;
+                m_virtualCursorX = std::clamp(m_virtualCursorX, 0.0f, float(m_screenWidth));
+                m_virtualCursorY = std::clamp(m_virtualCursorY, 0.0f, float(m_screenHeight));
+                cout << "m_virtualCursor : " << m_virtualCursorX << " " << m_virtualCursorY << endl;
+                m_cursorNdcX = m_virtualCursorX * 2.0f / m_screenWidth - 1.0f;
+                m_cursorNdcY = -m_virtualCursorY * 2.0f / m_screenHeight + 1.0f;
+                cout << "cursor_ndc : " << m_cursorNdcX << " " << m_cursorNdcY << endl;
+            } else {
+                m_camera.UpdateMouse(static_cast<float>(dx), static_cast<float>(dy));
+            }
+            
         }
 
         break;
     }
+    case WM_LBUTTONDOWN:
+        if (!m_leftButton) {
+            m_dragStartFlag = true;
+            POINT pt;
+            GetCursorPos(&pt);         // 스크린 절대 좌표
+            ScreenToClient(hwnd, &pt); // 클라이언트(렌더링 영역) 상대 좌표로 변환
+            m_virtualCursorX = float(pt.x);
+            m_virtualCursorY = float(pt.y);
+            cout << "virtual_cursor : "<<m_virtualCursorX << " " << m_virtualCursorY << endl;
+        }
+        m_leftButton = true;
+        break;
     case WM_LBUTTONUP:
         cout << "WM_LBUTTONUP Left mouse button" << endl;
+        m_leftButton = false;
+        break;
+    case WM_RBUTTONDOWN:
+        if (!m_rightButton) {
+            m_dragStartFlag = true;
+            POINT pt;
+            GetCursorPos(&pt);
+            ScreenToClient(hwnd, &pt);
+            m_virtualCursorX = float(pt.x);
+            m_virtualCursorY = float(pt.y);
+            cout << "virtual_cursor : "<<m_virtualCursorX << " " << m_virtualCursorY << endl;
+        }
+        m_rightButton = true;
         break;
     case WM_RBUTTONUP:
         cout << "WM_RBUTTONUP Right mouse button" << endl;
+        m_rightButton = false;
         break;
     case WM_KEYDOWN:
         cout << "WM_KEYDOWN " << (int)wParam << endl;

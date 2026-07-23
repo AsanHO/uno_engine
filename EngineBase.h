@@ -109,6 +109,18 @@ class EngineBase {
         false,
     };
 
+    //마우스관련
+    bool m_leftButton = false;
+    bool m_rightButton = false;
+    bool m_dragStartFlag = false;
+    bool m_selected = false;
+    float m_cursorNdcX;
+    float m_cursorNdcY;
+
+    // 마우스 좌표를 저장하는 변수 : 화면  좌표계 기준으로 저장 (picking에 사용)
+    float m_virtualCursorX = 0.0f;
+    float m_virtualCursorY = 0.0f;
+
      // 거울 구현을 더 효율적으로 하기 위해 ConstBuffer들 분리
     EyeViewProjConstData m_eyeViewProjConstData;
     EyeViewProjConstData m_mirrorEyeViewProjConstData;

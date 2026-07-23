@@ -1,6 +1,9 @@
 ﻿#include "UnoEngine.h"
 #include "GeometryGenerator.h"
 
+#include <DirectXCollision.h> // 구와 광선 충돌 계산에 사용
+#include <directxtk/DDSTextureLoader.h>
+#include <directxtk/SimpleMath.h>
 #include <tuple>
 #include <vector>
 
@@ -8,6 +11,8 @@ namespace hlab {
 
 using namespace std;
 using namespace DirectX;
+using namespace DirectX::SimpleMath;
+
 UnoEngine::UnoEngine() : EngineBase() {}
 
 bool UnoEngine::Initialize() {
@@ -73,8 +78,16 @@ bool UnoEngine::Initialize() {
         m_mainSphere->UpdateConstantBuffers(m_device, m_context);
 
         // 동일한 크기와 위치에 BoundingSphere 만들기
-        // m_mainBoundingSphere = BoundingSphere(center, radius);
-
+        m_mainBoundingSphere = BoundingSphere(center, radius);
+        // 커서 표시 (Main sphere와의 충돌이 감지되면 월드 공간에 작게 그려지는 구)
+        {
+            MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
+            m_cursorSphere.Initialize(m_device, m_context, vector{sphere});
+            m_cursorSphere.UpdateModelWorld(Matrix::CreateTranslation(Vector3(0.0f)));
+            m_cursorSphere.m_basicPixelConstData.material.albedo = Vector3(0.0f);
+            m_cursorSphere.m_basicPixelConstData.material.emission = Vector3(0.0f, 1.0f, 0.0f);
+            m_cursorSphere.UpdateConstantBuffers(m_device, m_context);
+        }
         m_basicList.push_back(m_mainSphere);
     }
 
@@ -98,6 +111,94 @@ void UnoEngine::Update(float dt) {
     // 큐브 매핑 Constant Buffer 업데이트
     m_cubeMapping.UpdateViewProjConstBuffer(m_device, m_context, viewRow, projRow, reflectionRow);
     // 포인트 라이트 효과
+    // ---- 여기부터 Picking 로직 추가 ----
+    static float prevRatio = 0.0f;
+    static Vector3 prevPos(0.0f);
+    static Vector3 prevVector(0.0f);
+    Quaternion q = Quaternion::CreateFromAxisAngle(Vector3(1.0f, 0.0f, 0.0f), 0.0f);
+    Vector3 dragTranslation(0.0f);
+
+    if (m_leftButton) {
+        Vector3 cursorNdcNear = Vector3(m_cursorNdcX, m_cursorNdcY, 0.0f);
+        Vector3 cursorNdcFar = Vector3(m_cursorNdcX, m_cursorNdcY, 1.0f);
+
+        Matrix inverseProjView = (viewRow * projRow).Invert();
+
+        Vector3 cursorWorldNear = Vector3::Transform(cursorNdcNear, inverseProjView);
+        Vector3 cursorWorldFar = Vector3::Transform(cursorNdcFar, inverseProjView);
+        Vector3 dir = cursorWorldFar - cursorWorldNear;
+        dir.Normalize();
+
+        SimpleMath::Ray curRay = SimpleMath::Ray(cursorWorldNear, dir);
+        float dist = 0.0f;
+        m_selected = curRay.Intersects(m_mainBoundingSphere, dist);
+
+        if (m_selected) {
+            Vector3 pickPoint = cursorWorldNear + dist * dir;
+            cout << pickPoint.x << ", " << pickPoint.y << ", " << pickPoint.z << endl;
+            m_cursorSphere.UpdateModelWorld(Matrix::CreateTranslation(pickPoint));
+            m_cursorSphere.UpdateConstantBuffers(m_device, m_context);
+
+            if (m_dragStartFlag) {
+                m_dragStartFlag = false;
+                prevVector = pickPoint - m_mainBoundingSphere.Center;
+                prevVector.Normalize();
+            } else {
+                Vector3 currentVector = pickPoint - m_mainBoundingSphere.Center;
+                currentVector.Normalize();
+                float theta = acos(prevVector.Dot(currentVector));
+                if (theta > 3.141592f / 180.0f * 3.0f) {
+                    Vector3 axis = prevVector.Cross(currentVector);
+                    axis.Normalize();
+                    q = SimpleMath::Quaternion::CreateFromAxisAngle(axis, theta);
+                    prevVector = currentVector;
+                }
+            }
+        }
+    }
+
+    if (m_rightButton) {
+        Vector3 cursorNdcNear = Vector3(m_cursorNdcX, m_cursorNdcY, 0.0f);
+        Vector3 cursorNdcFar = Vector3(m_cursorNdcX, m_cursorNdcY, 1.0f);
+
+        Matrix inverseProjView = (viewRow * projRow).Invert();
+
+        Vector3 cursorWorldNear = Vector3::Transform(cursorNdcNear, inverseProjView);
+        Vector3 cursorWorldFar = Vector3::Transform(cursorNdcFar, inverseProjView);
+        Vector3 dir = cursorWorldFar - cursorWorldNear;
+        dir.Normalize();
+
+        SimpleMath::Ray curRay = SimpleMath::Ray(cursorWorldNear, dir);
+        float dist = 0.0f;
+        m_selected = curRay.Intersects(m_mainBoundingSphere, dist);
+
+        if (m_selected) {
+            Vector3 pickPoint = cursorWorldNear + dist * dir;
+
+            m_cursorSphere.UpdateModelWorld(Matrix::CreateTranslation(pickPoint));
+            m_cursorSphere.UpdateConstantBuffers(m_device, m_context);
+
+            if (m_dragStartFlag) {
+                m_dragStartFlag = false;
+                prevRatio = dist / (cursorWorldFar - cursorWorldNear).Length();
+                prevPos = pickPoint;
+            } else {
+                Vector3 newPos = cursorWorldNear + prevRatio * (cursorWorldFar - cursorWorldNear);
+                if ((newPos - prevPos).Length() > 1e-3) {
+                    dragTranslation = newPos - prevPos;
+                    prevPos = newPos;
+                }
+            }
+        }
+    }
+
+    // 회전/이동 결과를 실제 mainSphere에 적용
+    Vector3 translation = m_mainSphere->m_modelWorldRow.Translation();
+    m_mainSphere->m_modelWorldRow.Translation(Vector3(0.0f));
+    m_mainSphere->UpdateModelWorld(m_mainSphere->m_modelWorldRow * Matrix::CreateFromQuaternion(q) *
+                                   Matrix::CreateTranslation(dragTranslation + translation));
+    m_mainBoundingSphere.Center = m_mainSphere->m_modelWorldRow.Translation();
+    // ---- Picking 로직 끝 ----
     Light pointLight;
     pointLight.position = m_lightPosition;
     pointLight.strength = Vector3(1.0f); // Strength
@@ -152,7 +253,11 @@ void UnoEngine::Render() {
     for (auto &i : m_basicList) {
         i->Render(m_context, EngineBase::m_eyeViewProjConstBuffer, m_useEnv);
     }
-
+    // ---- 커서 구 렌더링 추가 ----
+    if ((m_leftButton || m_rightButton) && m_selected) {
+        m_cursorSphere.Render(m_context, EngineBase::m_eyeViewProjConstBuffer, false);
+    }
+    // ---- 여기까지 추가 ----
     // if (m_useEnv) { TODO: 환경맵을 그릴지 말지 결정하는 옵션 필요
     m_cubeMapping.Render(m_context, false);
 

@@ -5,14 +5,14 @@
 #include <iostream>
 #include <memory>
 #include <vector>
-
+#include <DirectXCollision.h>   // BoundingSphere
 #include "BasicMeshGroup.h"
 #include "CubeMapping.h"
 #include "EngineBase.h"
 
 namespace hlab {
 
-using DirectX::SimpleMath::Matrix;
+using DirectX::BoundingSphere;
 using DirectX::SimpleMath::Vector3;
 
 // 이 예제에서 사용하는 Vertex 정의
@@ -38,12 +38,17 @@ class UnoEngine : public EngineBase {
 
     bool m_usePerspectiveProjection = true;
 
-    // 거울 (신규)
+     // 유저 인터랙션 (신규)
+    BoundingSphere m_mainBoundingSphere;
+    BasicMeshGroup m_cursorSphere;
+    
+
+    // 거울
     shared_ptr<BasicMeshGroup> m_mirror;
     DirectX::SimpleMath::Plane m_mirrorPlane;
     float m_mirrorAlpha = 0.5f;
 
-    // 거울 제외 물체 리스트 (신규)
+    // 거울 제외 물체 리스트
     vector<shared_ptr<BasicMeshGroup>> m_basicList;
 };
 } // namespace hlab
