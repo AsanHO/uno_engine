@@ -1,121 +1,106 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <FxCompile Include="CubeMappingPS.hlsl" />
-    <FxCompile Include="CubeMappingVs.hlsl" />
-    <FxCompile Include="BasicVS.hlsl" />
-    <FxCompile Include="BasicPS.hlsl" />
-    <FxCompile Include="NormalGS.hlsl" />
-    <FxCompile Include="NormalVS.hlsl" />
-    <FxCompile Include="NormalPS.hlsl" />
-    <FxCompile Include="SamplingVS.hlsl" />
-    <FxCompile Include="CombinePS.hlsl" />
-    <FxCompile Include="BloomDownPS.hlsl" />
-    <FxCompile Include="BloomUpPS.hlsl" />
+    <FxCompile Include="BasicPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BasicVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BloomDownPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="BloomUpPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CombinePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CubeMappingPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="CubeMappingVs.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalGS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="NormalVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SamplingVS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="EngineBase.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="UnoEngine.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="main.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="CubeMapping.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="D3D11Utils.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="GeometryGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ModelLoader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ImageFilter.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PostProcess.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="BasicMeshGroup.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
+    <ClCompile Include="BasicMeshGroup.cpp" />
+    <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="CubeMapping.cpp" />
+    <ClCompile Include="D3D11Utils.cpp" />
+    <ClCompile Include="EngineBase.cpp" />
+    <ClCompile Include="GeometryGenerator.cpp" />
+    <ClCompile Include="ImageFilter.cpp" />
+    <ClCompile Include="main.cpp" />
+    <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="PostProcess.cpp" />
+    <ClCompile Include="UnoEngine.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EngineBase.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="UnoEngine.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="CubeMapping.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Vertex.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="GeometryGenerator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Material.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Mesh.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="MeshData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ModelLoader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="D3D11Utils.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="ImageFilter.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PostProcess.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BasicMeshGroup.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="BasicConstantData.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="Light.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="ImageFilter.h" />
+    <ClInclude Include="BasicConstantData.h" />
+    <ClInclude Include="BasicMeshGroup.h" />
+    <ClInclude Include="Camera.h" />
+    <ClInclude Include="CubeMapping.h" />
+    <ClInclude Include="D3D11Utils.h" />
+    <ClInclude Include="EngineBase.h" />
+    <ClInclude Include="GeometryGenerator.h" />
+    <ClInclude Include="Light.h" />
+    <ClInclude Include="Material.h" />
+    <ClInclude Include="Mesh.h" />
+    <ClInclude Include="MeshData.h" />
+    <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="PostProcess.h" />
+    <ClInclude Include="UnoEngine.h" />
+    <ClInclude Include="Vertex.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
-    <None Include="Common.hlsli" />
+    <None Include="Common.hlsli">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{bcc0906f-32d7-477c-937d-24998f1719c7}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files">
       <UniqueIdentifier>{f6ad9a9a-efa7-4f62-9a0a-18c9c232db49}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Shaders">
+      <UniqueIdentifier>{b39b0467-0c19-4ebb-9ac7-a342957e7679}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="ddss">
+      <UniqueIdentifier>{44a2c12f-7459-41a6-8462-92ddf67c9422}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseHDR.dds" />
-    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseMDR.dds" />
-    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvHDR.dds" />
-    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvMDR.dds" />
-    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularHDR.dds" />
-    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularMDR.dds" />
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseHDR.dds">
+      <Filter>ddss</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorDiffuseMDR.dds">
+      <Filter>ddss</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvHDR.dds">
+      <Filter>ddss</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorEnvMDR.dds">
+      <Filter>ddss</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularHDR.dds">
+      <Filter>ddss</Filter>
+    </Image>
+    <Image Include="Assets\Textures\Cubemaps\HDRI\indoorSpecularMDR.dds">
+      <Filter>ddss</Filter>
+    </Image>
   </ItemGroup>
 </Project>
