@@ -25,10 +25,12 @@ class UnoEngine : public EngineBase {
   protected:
     shared_ptr<Model> m_mainSphere;
     shared_ptr<Model> m_skybox;
+    Light m_light;
+    shared_ptr<Model> m_lightSphere;
 
-    Vector3 m_lightPosition = Vector3(0.0f, 1.0f, 0.0f);
     bool m_usePerspectiveProjection = true;
 
+   
     // 유저 인터랙션
     BoundingSphere m_mainBoundingSphere;
     shared_ptr<Model> m_cursorSphere;

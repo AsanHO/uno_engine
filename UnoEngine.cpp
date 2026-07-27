@@ -31,6 +31,13 @@ bool UnoEngine::Initialize() {
         m_skybox = make_shared<Model>(m_device, m_context, vector{skyboxMesh});
     }
 
+    // 조명 설정
+    {
+        m_light.position = Vector3(0.0f, 0.5f, 1.7f);
+        m_light.radiance = Vector3(5.0f);
+        m_light.fallOffEnd = 20.0f;
+    }
+
     // 거울
     {
         auto mesh = GeometryGenerator::MakeSquare(1.0f);
@@ -74,6 +81,17 @@ bool UnoEngine::Initialize() {
         m_basicList.push_back(m_mainSphere);
     }
 
+    // 조명 위치 표시
+    {
+        MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
+        m_lightSphere = make_shared<Model>(m_device, m_context, vector{sphere});
+        m_lightSphere->UpdateWorldRow(Matrix::CreateTranslation(m_light.position));
+        m_lightSphere->m_materialConstsCPU.albedoFactor = Vector3(0.0f);
+        m_lightSphere->m_materialConstsCPU.emissionFactor = Vector3(1.0f, 1.0f, 0.0f);
+
+        m_basicList.push_back(m_lightSphere); // 리스트에 등록
+    }
+
     // 커서 표시
     {
         MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
@@ -96,11 +114,15 @@ void UnoEngine::Update(float dt) {
     Matrix projRow = m_camera.GetProjRow();
 
     // 조명 설정 (GlobalConstants에 딱 한 번만!)
-    m_globalConstsCPU.lights[1].position = m_lightPosition;
-    m_globalConstsCPU.lights[1].radiance = Vector3(1.0f);
-    m_globalConstsCPU.lights[1].fallOffEnd = 20.0f;
+    m_globalConstsCPU.lights[1] = m_light;
 
     EngineBase::UpdateGlobalConstants(eyeWorld, viewRow, projRow, reflectionRow);
+
+    // 거울은 따로 처리
+    m_mirror->UpdateConstantBuffers(m_device, m_context);
+
+    // 조명의 위치 반영
+    m_lightSphere->UpdateWorldRow(Matrix::CreateTranslation(m_light.position));
 
     // ---- Picking 로직 (동일한 알고리즘, Model API로 교체) ----
     static float prevRatio = 0.0f;
@@ -198,7 +220,6 @@ void UnoEngine::Update(float dt) {
     for (auto &i : m_basicList) {
         i->UpdateConstantBuffers(m_device, m_context);
     }
-    m_mirror->UpdateConstantBuffers(m_device, m_context);
 }
 void UnoEngine::Render() {
     m_context->RSSetViewports(1, &m_screenViewport);
@@ -269,12 +290,30 @@ void UnoEngine::Render() {
     m_postProcess.Render(m_context);
 }
 void UnoEngine::UpdateGUI() {
+
     ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("General")) {
+
         ImGui::Checkbox("Wireframe", &m_isDrawAsWire);
+        if (ImGui::Checkbox("MSAA ON", &m_useMSAA)) {
+            CreateBuffers();
+        }
         ImGui::TreePop();
     }
 
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::TreeNode("Env Map")) {
+        ImGui::SliderFloat("Strength", &m_globalConstsCPU.strengthIBL, 0.0f, 5.0f);
+        ImGui::RadioButton("Env", &m_globalConstsCPU.textureToDraw, 0);
+        ImGui::SameLine();
+        ImGui::RadioButton("Specular", &m_globalConstsCPU.textureToDraw, 1);
+        ImGui::SameLine();
+        ImGui::RadioButton("Irradiance", &m_globalConstsCPU.textureToDraw, 2);
+        ImGui::SliderFloat("EnvLodBias", &m_globalConstsCPU.envLodBias, 0.0f, 10.0f);
+        ImGui::TreePop();
+    }
+
+    ImGui::SetNextItemOpen(false, ImGuiCond_Once);
     if (ImGui::TreeNode("Post Processing")) {
         int flag = 0;
         flag += ImGui::SliderFloat("Bloom Strength",
@@ -283,25 +322,49 @@ void UnoEngine::UpdateGUI() {
                                    0.0f, 10.0f);
         flag += ImGui::SliderFloat("Gamma", &m_postProcess.m_combineFilter.m_constData.option2,
                                    0.1f, 5.0f);
+        // 편의상 사용자 입력이 인식되면 바로 GPU 버퍼를 업데이트
         if (flag) {
             m_postProcess.m_combineFilter.UpdateConstantBuffers(m_device, m_context);
         }
         ImGui::TreePop();
     }
 
-    if (ImGui::TreeNode("Point Light")) {
-        ImGui::SliderFloat3("Position", &m_lightPosition.x, -5.0f, 5.0f);
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::TreeNode("Mirror")) {
+
+        ImGui::SliderFloat("Alpha", &m_mirrorAlpha, 0.0f, 1.0f);
+        const float blendColor[4] = {m_mirrorAlpha, m_mirrorAlpha, m_mirrorAlpha, 1.0f};
+        if (m_isDrawAsWire)
+            Graphics::mirrorBlendWirePSO.SetBlendFactor(blendColor);
+        else
+            Graphics::mirrorBlendSolidPSO.SetBlendFactor(blendColor);
+
+        ImGui::SliderFloat("Metallic", &m_mirror->m_materialConstsCPU.metallicFactor, 0.0f, 1.0f);
+        ImGui::SliderFloat("Roughness", &m_mirror->m_materialConstsCPU.roughnessFactor, 0.0f, 1.0f);
+
         ImGui::TreePop();
     }
 
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::TreeNode("Point Light")) {
+        ImGui::SliderFloat3("Position", &m_light.position.x, -5.0f, 5.0f);
+        ImGui::TreePop();
+    }
+
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
     if (ImGui::TreeNode("Material")) {
+        ImGui::SliderFloat("LodBias", &m_globalConstsCPU.lodBias, 0.0f, 10.0f);
+
         int flag = 0;
+
         flag += ImGui::SliderFloat("Metallic", &m_mainSphere->m_materialConstsCPU.metallicFactor,
                                    0.0f, 1.0f);
         flag += ImGui::SliderFloat("Roughness", &m_mainSphere->m_materialConstsCPU.roughnessFactor,
                                    0.0f, 1.0f);
         flag += ImGui::CheckboxFlags("AlbedoTexture",
                                      &m_mainSphere->m_materialConstsCPU.useAlbedoMap, 1);
+        flag += ImGui::CheckboxFlags("EmissiveTexture",
+                                     &m_mainSphere->m_materialConstsCPU.useEmissiveMap, 1);
         flag += ImGui::CheckboxFlags("Use NormalMapping",
                                      &m_mainSphere->m_materialConstsCPU.useNormalMap, 1);
         flag += ImGui::CheckboxFlags("Use AO", &m_mainSphere->m_materialConstsCPU.useAOMap, 1);
@@ -313,11 +376,12 @@ void UnoEngine::UpdateGUI() {
                                      &m_mainSphere->m_materialConstsCPU.useMetallicMap, 1);
         flag += ImGui::CheckboxFlags("Use RoughnessMap",
                                      &m_mainSphere->m_materialConstsCPU.useRoughnessMap, 1);
-        flag += ImGui::Checkbox("Draw Normals", &m_mainSphere->m_drawNormals);
 
         if (flag) {
             m_mainSphere->UpdateConstantBuffers(m_device, m_context);
         }
+
+        ImGui::Checkbox("Draw Normals", &m_mainSphere->m_drawNormals);
 
         ImGui::TreePop();
     }
