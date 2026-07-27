@@ -166,6 +166,10 @@ LRESULT EngineBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ScreenToClient(hwnd, &pt);
             m_virtualCursorX = float(pt.x);
             m_virtualCursorY = float(pt.y);
+            m_cursorNdcX = m_virtualCursorX * 2.0f / m_screenWidth - 1.0f;
+            m_cursorNdcY = -m_virtualCursorY * 2.0f / m_screenHeight + 1.0f;
+            m_cursorNdcX = std::clamp(m_cursorNdcX, -1.0f, 1.0f);
+            m_cursorNdcY = std::clamp(m_cursorNdcY, -1.0f, 1.0f);
         }
         m_leftButton = true;
         break;
@@ -180,6 +184,10 @@ LRESULT EngineBase::MsgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
             ScreenToClient(hwnd, &pt);
             m_virtualCursorX = float(pt.x);
             m_virtualCursorY = float(pt.y);
+            m_cursorNdcX = m_virtualCursorX * 2.0f / m_screenWidth - 1.0f;
+            m_cursorNdcY = -m_virtualCursorY * 2.0f / m_screenHeight + 1.0f;
+            m_cursorNdcX = std::clamp(m_cursorNdcX, -1.0f, 1.0f);
+            m_cursorNdcY = std::clamp(m_cursorNdcY, -1.0f, 1.0f);
         }
         m_rightButton = true;
         break;

@@ -121,12 +121,12 @@ void UnoEngine::Update(float dt) {
         SimpleMath::Ray curRay = SimpleMath::Ray(cursorWorldNear, dir);
         float dist = 0.0f;
         m_selected = curRay.Intersects(m_mainBoundingSphere, dist);
-
+        cout << "click Cursor NDC in Uno: (" << m_cursorNdcX << ", " << m_cursorNdcY << ")" << endl;
         if (m_selected) {
             Vector3 pickPoint = cursorWorldNear + dist * dir;
 
-            m_cursorSphere->m_isVisible = true;
             m_cursorSphere->UpdateWorldRow(Matrix::CreateTranslation(pickPoint));
+            m_cursorSphere->m_isVisible = true;
 
             if (m_dragStartFlag) {
                 m_dragStartFlag = false;
