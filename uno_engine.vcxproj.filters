@@ -16,10 +16,10 @@
     <FxCompile Include="CombinePS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="CubeMappingPS.hlsl">
+    <FxCompile Include="SkyboxPS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
-    <FxCompile Include="CubeMappingVs.hlsl">
+    <FxCompile Include="SkyboxVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
     <FxCompile Include="NormalGS.hlsl">
@@ -34,11 +34,15 @@
     <FxCompile Include="SamplingVS.hlsl">
       <Filter>Shaders</Filter>
     </FxCompile>
+    <FxCompile Include="SimplePS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
+    <FxCompile Include="SamplingPS.hlsl">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="BasicMeshGroup.cpp" />
     <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="CubeMapping.cpp" />
     <ClCompile Include="D3D11Utils.cpp" />
     <ClCompile Include="EngineBase.cpp" />
     <ClCompile Include="GeometryGenerator.cpp" />
@@ -47,13 +51,13 @@
     <ClCompile Include="ModelLoader.cpp" />
     <ClCompile Include="PostProcess.cpp" />
     <ClCompile Include="UnoEngine.cpp" />
+    <ClCompile Include="Model.cpp" />
+    <ClCompile Include="GraphicsPSO.cpp" />
+    <ClCompile Include="GraphicsCommon.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ImageFilter.h" />
-    <ClInclude Include="BasicConstantData.h" />
-    <ClInclude Include="BasicMeshGroup.h" />
     <ClInclude Include="Camera.h" />
-    <ClInclude Include="CubeMapping.h" />
     <ClInclude Include="D3D11Utils.h" />
     <ClInclude Include="EngineBase.h" />
     <ClInclude Include="GeometryGenerator.h" />
@@ -65,6 +69,10 @@
     <ClInclude Include="PostProcess.h" />
     <ClInclude Include="UnoEngine.h" />
     <ClInclude Include="Vertex.h" />
+    <ClInclude Include="ConstantBuffers.h" />
+    <ClInclude Include="Model.h" />
+    <ClInclude Include="GraphicsPSO.h" />
+    <ClInclude Include="GraphicsCommon.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />

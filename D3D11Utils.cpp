@@ -1,4 +1,4 @@
-//#pragma message("=== D3D11Utils.cpp IS COMPILING ===")
+// #pragma message("=== D3D11Utils.cpp IS COMPILING ===")
 #define _CRT_SECURE_NO_WARNINGS // stb_image_write compile error fix
 
 #include "D3D11Utils.h"
@@ -92,48 +92,50 @@ void D3D11Utils::CreateVertexShaderAndInputLayout(
                               &m_inputLayout);
 }
 
-//void D3D11Utils::CreateHullShader(ComPtr<ID3D11Device> &device, const wstring &filename,
-//                                  ComPtr<ID3D11HullShader> &m_hullShader) {
-//    ComPtr<ID3DBlob> shaderBlob;
-//    ComPtr<ID3DBlob> errorBlob;
+// void D3D11Utils::CreateHullShader(ComPtr<ID3D11Device> &device, const wstring &filename,
+//                                   ComPtr<ID3D11HullShader> &m_hullShader) {
+//     ComPtr<ID3DBlob> shaderBlob;
+//     ComPtr<ID3DBlob> errorBlob;
 //
-//    UINT compileFlags = 0;
-//#if defined(DEBUG) || defined(_DEBUG)
-//    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-//#endif
+//     UINT compileFlags = 0;
+// #if defined(DEBUG) || defined(_DEBUG)
+//     compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+// #endif
 //
-//    // 쉐이더의 시작점의 이름이 "main"인 함수로 지정
-//    // D3D_COMPILE_STANDARD_FILE_INCLUDE 추가: 쉐이더에서 include 사용
-//    HRESULT hr = D3DCompileFromFile(filename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main",
-//                                    "hs_5_0", compileFlags, 0, &shaderBlob, &errorBlob);
+//     // 쉐이더의 시작점의 이름이 "main"인 함수로 지정
+//     // D3D_COMPILE_STANDARD_FILE_INCLUDE 추가: 쉐이더에서 include 사용
+//     HRESULT hr = D3DCompileFromFile(filename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+//     "main",
+//                                     "hs_5_0", compileFlags, 0, &shaderBlob, &errorBlob);
 //
-//    CheckResult(hr, errorBlob.Get());
+//     CheckResult(hr, errorBlob.Get());
 //
-//    device->CreateHullShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
-//                             &m_hullShader);
-//}
+//     device->CreateHullShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
+//                              &m_hullShader);
+// }
 
-//void D3D11Utils::CreateDomainShader(ComPtr<ID3D11Device> &device, const wstring &filename,
-//                                    ComPtr<ID3D11DomainShader> &m_domainShader) {
+// void D3D11Utils::CreateDomainShader(ComPtr<ID3D11Device> &device, const wstring &filename,
+//                                     ComPtr<ID3D11DomainShader> &m_domainShader) {
 //
-//    ComPtr<ID3DBlob> shaderBlob;
-//    ComPtr<ID3DBlob> errorBlob;
+//     ComPtr<ID3DBlob> shaderBlob;
+//     ComPtr<ID3DBlob> errorBlob;
 //
-//    UINT compileFlags = 0;
-//#if defined(DEBUG) || defined(_DEBUG)
-//    compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
-//#endif
+//     UINT compileFlags = 0;
+// #if defined(DEBUG) || defined(_DEBUG)
+//     compileFlags = D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION;
+// #endif
 //
-//    // 쉐이더의 시작점의 이름이 "main"인 함수로 지정
-//    // D3D_COMPILE_STANDARD_FILE_INCLUDE 추가: 쉐이더에서 include 사용
-//    HRESULT hr = D3DCompileFromFile(filename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main",
-//                                    "ds_5_0", compileFlags, 0, &shaderBlob, &errorBlob);
+//     // 쉐이더의 시작점의 이름이 "main"인 함수로 지정
+//     // D3D_COMPILE_STANDARD_FILE_INCLUDE 추가: 쉐이더에서 include 사용
+//     HRESULT hr = D3DCompileFromFile(filename.c_str(), 0, D3D_COMPILE_STANDARD_FILE_INCLUDE,
+//     "main",
+//                                     "ds_5_0", compileFlags, 0, &shaderBlob, &errorBlob);
 //
-//    CheckResult(hr, errorBlob.Get());
+//     CheckResult(hr, errorBlob.Get());
 //
-//    device->CreateDomainShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
-//                               &m_domainShader);
-//}
+//     device->CreateDomainShader(shaderBlob->GetBufferPointer(), shaderBlob->GetBufferSize(), NULL,
+//                                &m_domainShader);
+// }
 
 void D3D11Utils::CreatePixelShader(ComPtr<ID3D11Device> &device, const wstring &filename,
                                    ComPtr<ID3D11PixelShader> &m_pixelShader) {
@@ -228,10 +230,10 @@ void ReadEXRImage(const std::string filename, std::vector<uint8_t> &image, int &
 
     cout << minValue << " " << maxValue << endl;
 
-     f16 = (uint16_t *)image.data();
-     for (int i = 0; i < image.size() / 2; i++) {
-         f16[i] = fp16_ieee_from_fp32_value(f32[i] * 2.0f);
-     }
+    f16 = (uint16_t *)image.data();
+    for (int i = 0; i < image.size() / 2; i++) {
+        f16[i] = fp16_ieee_from_fp32_value(f32[i] * 2.0f);
+    }
 }
 
 void ReadImage(const std::string filename, std::vector<uint8_t> &image, int &width, int &height) {
@@ -282,10 +284,11 @@ void ReadImage(const std::string filename, std::vector<uint8_t> &image, int &wid
     delete[] img;
 }
 
-ComPtr<ID3D11Texture2D> CreateStagingTexture(ComPtr<ID3D11Device> &device,
-                                             ComPtr<ID3D11DeviceContext> &context, const int width,
-                                             const int height, const std::vector<uint8_t> &image,
-                                             const int mipLevels = 1, const int arraySize = 1) {
+ComPtr<ID3D11Texture2D>
+CreateStagingTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+                     const int width, const int height, const std::vector<uint8_t> &image,
+                     const DXGI_FORMAT pixelFormat = DXGI_FORMAT_R8G8B8A8_UNORM,
+                     const int mipLevels = 1, const int arraySize = 1) {
 
     // 스테이징 텍스춰 만들기
     D3D11_TEXTURE2D_DESC txtDesc;
@@ -294,7 +297,7 @@ ComPtr<ID3D11Texture2D> CreateStagingTexture(ComPtr<ID3D11Device> &device,
     txtDesc.Height = height;
     txtDesc.MipLevels = mipLevels;
     txtDesc.ArraySize = arraySize;
-    txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    txtDesc.Format = pixelFormat;
     txtDesc.SampleDesc.Count = 1;
     txtDesc.Usage = D3D11_USAGE_STAGING;
     txtDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ;
@@ -316,98 +319,98 @@ ComPtr<ID3D11Texture2D> CreateStagingTexture(ComPtr<ID3D11Device> &device,
     return stagingTexture;
 }
 
-//void CreateTextureHelper(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-//                         const int width, const int height, const vector<uint8_t> &image,
-//                         const DXGI_FORMAT pixelFormat, ComPtr<ID3D11Texture2D> &texture,
-//                         ComPtr<ID3D11ShaderResourceView> &srv) {
-//
-//    // 스테이징 텍스춰 만들고 CPU에서 이미지를 복사합니다.
-//    ComPtr<ID3D11Texture2D> stagingTexture =
-//        CreateStagingTexture(device, context, width, height, image, pixelFormat);
-//
-//    // 실제로 사용할 텍스춰 설정
-//    D3D11_TEXTURE2D_DESC txtDesc;
-//    ZeroMemory(&txtDesc, sizeof(txtDesc));
-//    txtDesc.Width = width;
-//    txtDesc.Height = height;
-//    txtDesc.MipLevels = 0; // 밉맵 레벨 최대
-//    txtDesc.ArraySize = 1;
-//    txtDesc.Format = pixelFormat;
-//    txtDesc.SampleDesc.Count = 1;
-//    txtDesc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
-//    txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-//    txtDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // 밉맵 사용
-//    txtDesc.CPUAccessFlags = 0;
-//
-//    // 초기 데이터 없이 텍스춰 생성 (전부 검은색)
-//    device->CreateTexture2D(&txtDesc, NULL, texture.GetAddressOf());
-//
-//    // 실제로 생성된 MipLevels를 확인해보고 싶을 경우
-//    // texture->GetDesc(&txtDesc);
-//    // cout << txtDesc.MipLevels << endl;
-//
-//    // 스테이징 텍스춰로부터 가장 해상도가 높은 이미지 복사
-//    context->CopySubresourceRegion(texture.Get(), 0, 0, 0, 0, stagingTexture.Get(), 0, NULL);
-//
-//    // ResourceView 만들기
-//    device->CreateShaderResourceView(texture.Get(), 0, srv.GetAddressOf());
-//
-//    // 해상도를 낮춰가며 밉맵 생성
-//    context->GenerateMips(srv.Get());
-//
-//    // HLSL 쉐이더 안에서는 SampleLevel() 사용
-//}
+void CreateTextureHelper(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+                         const int width, const int height, const vector<uint8_t> &image,
+                         const DXGI_FORMAT pixelFormat, ComPtr<ID3D11Texture2D> &texture,
+                         ComPtr<ID3D11ShaderResourceView> &srv) {
 
-//void D3D11Utils::CreateMetallicRoughnessTexture(ComPtr<ID3D11Device> &device,
-//                                                ComPtr<ID3D11DeviceContext> &context,
-//                                                const std::string metallicFilename,
-//                                                const std::string roughnessFilename,
-//                                                ComPtr<ID3D11Texture2D> &texture,
-//                                                ComPtr<ID3D11ShaderResourceView> &srv) {
-//
-//    // GLTF 방식은 이미 합쳐져 있음
-//    if (!metallicFilename.empty() && (metallicFilename == roughnessFilename)) {
-//        CreateTexture(device, context, metallicFilename, false, texture, srv);
-//    } else {
-//        // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
-//
-//        // ReadImage()를 활용하기 위해서 두 이미지들을 각각 4채널로 변환 후 다시
-//        // 3채널로 합치는 방식으로 구현
-//        int mWidth = 0, mHeight = 0;
-//        int rWidth = 0, rHeight = 0;
-//        std::vector<uint8_t> mImage;
-//        std::vector<uint8_t> rImage;
-//
-//        // (거의 없겠지만) 둘 중 하나만 있을 경우도 고려하기 위해 각각 파일명
-//        // 확인
-//        if (!metallicFilename.empty()) {
-//            ReadImage(metallicFilename, mImage, mWidth, mHeight);
-//        }
-//
-//        if (!roughnessFilename.empty()) {
-//            ReadImage(roughnessFilename, rImage, rWidth, rHeight);
-//        }
-//
-//        // 두 이미지의 해상도가 같다고 가정
-//        if (!metallicFilename.empty() && !roughnessFilename.empty()) {
-//            assert(mWidth == rWidth);
-//            assert(mHeight == rHeight);
-//        }
-//
-//        vector<uint8_t> combinedImage(size_t(mWidth * mHeight) * 4);
-//        fill(combinedImage.begin(), combinedImage.end(), 0);
-//
-//        for (size_t i = 0; i < size_t(mWidth * mHeight); i++) {
-//            if (rImage.size())
-//                combinedImage[4 * i + 1] = rImage[4 * i]; // Green = Roughness
-//            if (mImage.size())
-//                combinedImage[4 * i + 2] = mImage[4 * i]; // Blue = Metalness
-//        }
-//
-//        CreateTextureHelper(device, context, mWidth, mHeight, combinedImage,
-//                            DXGI_FORMAT_R8G8B8A8_UNORM, texture, srv);
-//    }
-//}
+    // 스테이징 텍스춰 만들고 CPU에서 이미지를 복사합니다.
+    ComPtr<ID3D11Texture2D> stagingTexture =
+        CreateStagingTexture(device, context, width, height, image, pixelFormat);
+
+    // 실제로 사용할 텍스춰 설정
+    D3D11_TEXTURE2D_DESC txtDesc;
+    ZeroMemory(&txtDesc, sizeof(txtDesc));
+    txtDesc.Width = width;
+    txtDesc.Height = height;
+    txtDesc.MipLevels = 0; // 밉맵 레벨 최대
+    txtDesc.ArraySize = 1;
+    txtDesc.Format = pixelFormat;
+    txtDesc.SampleDesc.Count = 1;
+    txtDesc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
+    txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    txtDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // 밉맵 사용
+    txtDesc.CPUAccessFlags = 0;
+
+    // 초기 데이터 없이 텍스춰 생성 (전부 검은색)
+    device->CreateTexture2D(&txtDesc, NULL, texture.GetAddressOf());
+
+    // 실제로 생성된 MipLevels를 확인해보고 싶을 경우
+    // texture->GetDesc(&txtDesc);
+    // cout << txtDesc.MipLevels << endl;
+
+    // 스테이징 텍스춰로부터 가장 해상도가 높은 이미지 복사
+    context->CopySubresourceRegion(texture.Get(), 0, 0, 0, 0, stagingTexture.Get(), 0, NULL);
+
+    // ResourceView 만들기
+    device->CreateShaderResourceView(texture.Get(), 0, srv.GetAddressOf());
+
+    // 해상도를 낮춰가며 밉맵 생성
+    context->GenerateMips(srv.Get());
+
+    // HLSL 쉐이더 안에서는 SampleLevel() 사용
+}
+
+void D3D11Utils::CreateMetallicRoughnessTexture(ComPtr<ID3D11Device> &device,
+                                                ComPtr<ID3D11DeviceContext> &context,
+                                                const std::string metallicFilename,
+                                                const std::string roughnessFilename,
+                                                ComPtr<ID3D11Texture2D> &texture,
+                                                ComPtr<ID3D11ShaderResourceView> &srv) {
+
+    // GLTF 방식은 이미 합쳐져 있음
+    if (!metallicFilename.empty() && (metallicFilename == roughnessFilename)) {
+        CreateTexture(device, context, metallicFilename, false, texture, srv);
+    } else {
+        // 별도 파일일 경우 따로 읽어서 합쳐줍니다.
+
+        // ReadImage()를 활용하기 위해서 두 이미지들을 각각 4채널로 변환 후 다시
+        // 3채널로 합치는 방식으로 구현
+        int mWidth = 0, mHeight = 0;
+        int rWidth = 0, rHeight = 0;
+        std::vector<uint8_t> mImage;
+        std::vector<uint8_t> rImage;
+
+        // (거의 없겠지만) 둘 중 하나만 있을 경우도 고려하기 위해 각각 파일명
+        // 확인
+        if (!metallicFilename.empty()) {
+            ReadImage(metallicFilename, mImage, mWidth, mHeight);
+        }
+
+        if (!roughnessFilename.empty()) {
+            ReadImage(roughnessFilename, rImage, rWidth, rHeight);
+        }
+
+        // 두 이미지의 해상도가 같다고 가정
+        if (!metallicFilename.empty() && !roughnessFilename.empty()) {
+            assert(mWidth == rWidth);
+            assert(mHeight == rHeight);
+        }
+
+        vector<uint8_t> combinedImage(size_t(mWidth * mHeight) * 4);
+        fill(combinedImage.begin(), combinedImage.end(), 0);
+
+        for (size_t i = 0; i < size_t(mWidth * mHeight); i++) {
+            if (rImage.size())
+                combinedImage[4 * i + 1] = rImage[4 * i]; // Green = Roughness
+            if (mImage.size())
+                combinedImage[4 * i + 2] = mImage[4 * i]; // Blue = Metalness
+        }
+
+        CreateTextureHelper(device, context, mWidth, mHeight, combinedImage,
+                            DXGI_FORMAT_R8G8B8A8_UNORM, texture, srv);
+    }
+}
 
 void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
                                const std::string filename, const bool usSRGB,
@@ -428,10 +431,9 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Device
         ReadImage(filename, image, width, height);
     }
 
-
     // 스테이징 텍스춰 만들고 CPU에서 이미지를 복사합니다.
     ComPtr<ID3D11Texture2D> stagingTexture =
-        CreateStagingTexture(device, context, width, height, image);
+        CreateStagingTexture(device, context, width, height, image, pixelFormat);
 
     // 실제로 사용할 텍스춰 설정
     D3D11_TEXTURE2D_DESC txtDesc;
@@ -466,76 +468,76 @@ void D3D11Utils::CreateTexture(ComPtr<ID3D11Device> &device, ComPtr<ID3D11Device
     // HLSL 쉐이더 안에서는 SampleLevel() 사용
 }
 
-//void D3D11Utils::CreateTextureArray(ComPtr<ID3D11Device> &device,
-//                                    ComPtr<ID3D11DeviceContext> &context,
-//                                    const std::vector<std::string> filenames,
-//                                    ComPtr<ID3D11Texture2D> &texture,
-//                                    ComPtr<ID3D11ShaderResourceView> &textureResourceView) {
+// void D3D11Utils::CreateTextureArray(ComPtr<ID3D11Device> &device,
+//                                     ComPtr<ID3D11DeviceContext> &context,
+//                                     const std::vector<std::string> filenames,
+//                                     ComPtr<ID3D11Texture2D> &texture,
+//                                     ComPtr<ID3D11ShaderResourceView> &textureResourceView) {
 //
-//    using namespace std;
+//     using namespace std;
 //
-//    if (filenames.empty())
-//        return;
+//     if (filenames.empty())
+//         return;
 //
-//    // 모든 이미지의 width와 height가 같다고 가정합니다.
+//     // 모든 이미지의 width와 height가 같다고 가정합니다.
 //
-//    // 파일로부터 이미지 여러 개를 읽어들입니다.
-//    int width = 0, height = 0;
-//    vector<vector<uint8_t>> imageArray;
-//    for (const auto &f : filenames) {
+//     // 파일로부터 이미지 여러 개를 읽어들입니다.
+//     int width = 0, height = 0;
+//     vector<vector<uint8_t>> imageArray;
+//     for (const auto &f : filenames) {
 //
-//        cout << f << endl;
+//         cout << f << endl;
 //
-//        std::vector<uint8_t> image;
+//         std::vector<uint8_t> image;
 //
-//        ReadImage(f, image, width, height);
+//         ReadImage(f, image, width, height);
 //
-//        imageArray.push_back(image);
-//    }
+//         imageArray.push_back(image);
+//     }
 //
-//    UINT size = UINT(filenames.size());
+//     UINT size = UINT(filenames.size());
 //
-//    // Texture2DArray를 만듭니다. 이때 데이터를 CPU로부터 복사하지 않습니다.
-//    D3D11_TEXTURE2D_DESC txtDesc;
-//    ZeroMemory(&txtDesc, sizeof(txtDesc));
-//    txtDesc.Width = UINT(width);
-//    txtDesc.Height = UINT(height);
-//    txtDesc.MipLevels = 0; // 밉맵 레벨 최대
-//    txtDesc.ArraySize = size;
-//    txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-//    txtDesc.SampleDesc.Count = 1;
-//    txtDesc.SampleDesc.Quality = 0;
-//    txtDesc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
-//    txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
-//    txtDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // 밉맵 사용
+//     // Texture2DArray를 만듭니다. 이때 데이터를 CPU로부터 복사하지 않습니다.
+//     D3D11_TEXTURE2D_DESC txtDesc;
+//     ZeroMemory(&txtDesc, sizeof(txtDesc));
+//     txtDesc.Width = UINT(width);
+//     txtDesc.Height = UINT(height);
+//     txtDesc.MipLevels = 0; // 밉맵 레벨 최대
+//     txtDesc.ArraySize = size;
+//     txtDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+//     txtDesc.SampleDesc.Count = 1;
+//     txtDesc.SampleDesc.Quality = 0;
+//     txtDesc.Usage = D3D11_USAGE_DEFAULT; // 스테이징 텍스춰로부터 복사 가능
+//     txtDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+//     txtDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS; // 밉맵 사용
 //
-//    // 초기 데이터 없이 텍스춰를 만듭니다.
-//    device->CreateTexture2D(&txtDesc, NULL, texture.GetAddressOf());
+//     // 초기 데이터 없이 텍스춰를 만듭니다.
+//     device->CreateTexture2D(&txtDesc, NULL, texture.GetAddressOf());
 //
-//    // 실제로 만들어진 MipLevels를 확인
-//    texture->GetDesc(&txtDesc);
-//    // cout << txtDesc.MipLevels << endl;
+//     // 실제로 만들어진 MipLevels를 확인
+//     texture->GetDesc(&txtDesc);
+//     // cout << txtDesc.MipLevels << endl;
 //
-//    // StagingTexture를 만들어서 하나씩 복사합니다.
-//    for (size_t i = 0; i < imageArray.size(); i++) {
+//     // StagingTexture를 만들어서 하나씩 복사합니다.
+//     for (size_t i = 0; i < imageArray.size(); i++) {
 //
-//        auto &image = imageArray[i];
+//         auto &image = imageArray[i];
 //
-//        // StagingTexture는 Texture2DArray가 아니라 Texture2D 입니다.
-//        ComPtr<ID3D11Texture2D> stagingTexture =
-//            CreateStagingTexture(device, context, width, height, image, txtDesc.Format, 1, 1);
+//         // StagingTexture는 Texture2DArray가 아니라 Texture2D 입니다.
+//         ComPtr<ID3D11Texture2D> stagingTexture =
+//             CreateStagingTexture(device, context, width, height, image, txtDesc.Format, 1, 1);
 //
-//        // 스테이징 텍스춰를 텍스춰 배열의 해당 위치에 복사합니다.
-//        UINT subresourceIndex = D3D11CalcSubresource(0, UINT(i), txtDesc.MipLevels);
+//         // 스테이징 텍스춰를 텍스춰 배열의 해당 위치에 복사합니다.
+//         UINT subresourceIndex = D3D11CalcSubresource(0, UINT(i), txtDesc.MipLevels);
 //
-//        context->CopySubresourceRegion(texture.Get(), subresourceIndex, 0, 0, 0,
-//                                       stagingTexture.Get(), 0, NULL);
-//    }
+//         context->CopySubresourceRegion(texture.Get(), subresourceIndex, 0, 0, 0,
+//                                        stagingTexture.Get(), 0, NULL);
+//     }
 //
-//    device->CreateShaderResourceView(texture.Get(), NULL, textureResourceView.GetAddressOf());
+//     device->CreateShaderResourceView(texture.Get(), NULL, textureResourceView.GetAddressOf());
 //
-//    context->GenerateMips(textureResourceView.Get());
-//}
+//     context->GenerateMips(textureResourceView.Get());
+// }
 
 void D3D11Utils::CreateDDSTexture(ComPtr<ID3D11Device> &device, const wchar_t *filename,
                                   bool isCubeMap,
@@ -555,57 +557,59 @@ void D3D11Utils::CreateDDSTexture(ComPtr<ID3D11Device> &device, const wchar_t *f
         textureResourceView.GetAddressOf(), NULL));
 }
 
-//void D3D11Utils::WriteToFile(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
-//                             ComPtr<ID3D11Texture2D> &textureToWrite, const std::string filename) {
+// void D3D11Utils::WriteToFile(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
+//                              ComPtr<ID3D11Texture2D> &textureToWrite, const std::string filename)
+//                              {
 //
-//    D3D11_TEXTURE2D_DESC desc;
-//    textureToWrite->GetDesc(&desc);
-//    desc.SampleDesc.Count = 1;
-//    desc.SampleDesc.Quality = 0;
-//    desc.BindFlags = 0;
-//    desc.MiscFlags = 0;
-//    desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // CPU에서 읽기 가능
-//    desc.Usage = D3D11_USAGE_STAGING;            // GPU에서 CPU로 보낼 데이터를 임시 보관
+//     D3D11_TEXTURE2D_DESC desc;
+//     textureToWrite->GetDesc(&desc);
+//     desc.SampleDesc.Count = 1;
+//     desc.SampleDesc.Quality = 0;
+//     desc.BindFlags = 0;
+//     desc.MiscFlags = 0;
+//     desc.CPUAccessFlags = D3D11_CPU_ACCESS_READ; // CPU에서 읽기 가능
+//     desc.Usage = D3D11_USAGE_STAGING;            // GPU에서 CPU로 보낼 데이터를 임시 보관
 //
-//    ComPtr<ID3D11Texture2D> stagingTexture;
-//    if (FAILED(device->CreateTexture2D(&desc, NULL, stagingTexture.GetAddressOf()))) {
-//        cout << "Failed()" << endl;
-//    }
+//     ComPtr<ID3D11Texture2D> stagingTexture;
+//     if (FAILED(device->CreateTexture2D(&desc, NULL, stagingTexture.GetAddressOf()))) {
+//         cout << "Failed()" << endl;
+//     }
 //
-//    // 참고: 전체 복사할 때
-//    // context->CopyResource(stagingTexture.Get(), pTemp.Get());
+//     // 참고: 전체 복사할 때
+//     // context->CopyResource(stagingTexture.Get(), pTemp.Get());
 //
-//    // 일부만 복사할 때 사용
-//    D3D11_BOX box;
-//    box.left = 0;
-//    box.right = desc.Width;
-//    box.top = 0;
-//    box.bottom = desc.Height;
-//    box.front = 0;
-//    box.back = 1;
-//    context->CopySubresourceRegion(stagingTexture.Get(), 0, 0, 0, 0, textureToWrite.Get(), 0, &box);
+//     // 일부만 복사할 때 사용
+//     D3D11_BOX box;
+//     box.left = 0;
+//     box.right = desc.Width;
+//     box.top = 0;
+//     box.bottom = desc.Height;
+//     box.front = 0;
+//     box.back = 1;
+//     context->CopySubresourceRegion(stagingTexture.Get(), 0, 0, 0, 0, textureToWrite.Get(), 0,
+//     &box);
 //
-//    // R8G8B8A8 이라고 가정
-//    std::vector<uint8_t> pixels(desc.Width * desc.Height * 4);
+//     // R8G8B8A8 이라고 가정
+//     std::vector<uint8_t> pixels(desc.Width * desc.Height * 4);
 //
-//    D3D11_MAPPED_SUBRESOURCE ms;
-//    context->Map(stagingTexture.Get(), NULL, D3D11_MAP_READ, NULL,
-//                 &ms); // D3D11_MAP_READ 주의
+//     D3D11_MAPPED_SUBRESOURCE ms;
+//     context->Map(stagingTexture.Get(), NULL, D3D11_MAP_READ, NULL,
+//                  &ms); // D3D11_MAP_READ 주의
 //
-//    // 텍스춰가 작을 경우에는
-//    // ms.RowPitch가 width * sizeof(uint8_t) * 4보다 클 수도 있어서
-//    // for문으로 가로줄 하나씩 복사
-//    uint8_t *pData = (uint8_t *)ms.pData;
-//    for (unsigned int h = 0; h < desc.Height; h++) {
-//        memcpy(&pixels[h * desc.Width * 4], &pData[h * ms.RowPitch],
-//               desc.Width * sizeof(uint8_t) * 4);
-//    }
+//     // 텍스춰가 작을 경우에는
+//     // ms.RowPitch가 width * sizeof(uint8_t) * 4보다 클 수도 있어서
+//     // for문으로 가로줄 하나씩 복사
+//     uint8_t *pData = (uint8_t *)ms.pData;
+//     for (unsigned int h = 0; h < desc.Height; h++) {
+//         memcpy(&pixels[h * desc.Width * 4], &pData[h * ms.RowPitch],
+//                desc.Width * sizeof(uint8_t) * 4);
+//     }
 //
-//    context->Unmap(stagingTexture.Get(), NULL);
+//     context->Unmap(stagingTexture.Get(), NULL);
 //
-//    stbi_write_png(filename.c_str(), desc.Width, desc.Height, 4, pixels.data(), desc.Width * 4);
+//     stbi_write_png(filename.c_str(), desc.Width, desc.Height, 4, pixels.data(), desc.Width * 4);
 //
-//    cout << filename << endl;
-//}
+//     cout << filename << endl;
+// }
 
 } // namespace hlab
