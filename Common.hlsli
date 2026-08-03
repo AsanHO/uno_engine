@@ -5,19 +5,29 @@
 // Properties -> Item Type: Does not participate in build으로 설정
 
 #define MAX_LIGHTS 3 // 쉐이더에서도 #define 사용 가능
-#define NUM_DIR_LIGHTS 1
-#define NUM_POINT_LIGHTS 1
-#define NUM_SPOT_LIGHTS 1
+#define LIGHT_OFF 0x00
+#define LIGHT_DIRECTIONAL 0x01
+#define LIGHT_POINT 0x02
+#define LIGHT_SPOT 0x04
+#define LIGHT_SHADOW 0x10
 
 // 샘플러들을 모든 쉐이더에서 공통으로 사용
 SamplerState linearWrapSampler : register(s0);
 SamplerState linearClampSampler : register(s1);
+SamplerState shadowPointSampler : register(s2);
+SamplerComparisonState shadowCompareSampler : register(s3);
 
 // 공용 텍스춰들 t10 부터 시작
 TextureCube envIBLTex : register(t10);
 TextureCube specularIBLTex : register(t11);
 TextureCube irradianceIBLTex : register(t12);
 Texture2D brdfTex : register(t13);
+
+Texture2D shadowMaps[MAX_LIGHTS] : register(t15);
+//Texture2D shadowMap1 : register(t16);
+//Texture2D shadowMap2 : register(t17);
+
+//static Texture2D shadowMaps[MAX_LIGHTS] = { shadowMap0, shadowMap1, shadowMap2 };
 
 struct Light
 {
@@ -27,6 +37,13 @@ struct Light
     float fallOffEnd;
     float3 position;
     float spotPower;
+    
+    uint type;
+    float radius;
+    float2 dummy;
+
+    matrix viewProj;
+    matrix invProj;
 };
 
 // 공용 Constants
@@ -34,7 +51,9 @@ cbuffer GlobalConstants : register(b1)
 {
     matrix view;
     matrix proj;
+    matrix invProj; // 역프로젝션행렬
     matrix viewProj;
+    matrix invViewProj; // Proj -> World
     float3 eyeWorld;
     float strengthIBL;
 
@@ -43,7 +62,7 @@ cbuffer GlobalConstants : register(b1)
     float lodBias = 2.0f; // 다른 물체들 LodBias
     float dummy2;
     
-    Light light[MAX_LIGHTS];
+    Light lights[MAX_LIGHTS];
 };
 
 struct VertexShaderInput

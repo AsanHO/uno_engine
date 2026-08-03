@@ -1,7 +1,10 @@
 ﻿#include "EngineBase.h"
+
 #include <algorithm>
-#include <dxgi.h>
-#include <dxgi1_4.h>
+#include <directxtk/SimpleMath.h>
+
+#include "D3D11Utils.h"
+#include "GraphicsCommon.h"
 
 extern IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam,
                                                              LPARAM lParam);
@@ -75,13 +78,24 @@ void EngineBase::UpdateGlobalConstants(const Vector3 &eyeWorld, const Matrix &vi
     m_globalConstsCPU.eyeWorld = eyeWorld;
     m_globalConstsCPU.view = viewRow.Transpose();
     m_globalConstsCPU.proj = projRow.Transpose();
+    //신규->
+    m_globalConstsCPU.invProj = projRow.Invert().Transpose();
+    //<-
     m_globalConstsCPU.viewProj = (viewRow * projRow).Transpose();
 
+        // 신규->
+    m_globalConstsCPU.invViewProj = m_globalConstsCPU.viewProj.Invert();
+    //<-
     // 반사 버전은 CPU 구조체를 통째로 복사한 뒤 view/viewProj만 교체
     m_reflectGlobalConstsCPU = m_globalConstsCPU;
+    // 신규->
+    memcpy(&m_reflectGlobalConstsCPU, &m_globalConstsCPU, sizeof(m_globalConstsCPU));
+    //<-
     m_reflectGlobalConstsCPU.view = (refl * viewRow).Transpose();
     m_reflectGlobalConstsCPU.viewProj = (refl * viewRow * projRow).Transpose();
-
+    // 신규->
+    m_reflectGlobalConstsCPU.invViewProj = m_reflectGlobalConstsCPU.viewProj.Invert();
+    //<-
     D3D11Utils::UpdateBuffer(m_device, m_context, m_globalConstsCPU, m_globalConstsGPU);
     D3D11Utils::UpdateBuffer(m_device, m_context, m_reflectGlobalConstsCPU,
                              m_reflectGlobalConstsGPU);
@@ -95,6 +109,73 @@ void EngineBase::SetGlobalConsts(ComPtr<ID3D11Buffer> &globalConstsGPU) {
     m_context->GSSetConstantBuffers(1, 1, globalConstsGPU.GetAddressOf());
 }
 
+void EngineBase::CreateDepthBuffers() {
+
+    // DepthStencilView 만들기
+    D3D11_TEXTURE2D_DESC desc;
+    ZeroMemory(&desc, sizeof(desc));
+    desc.Width = m_screenWidth;
+    desc.Height = m_screenHeight;
+    desc.MipLevels = 1;
+    desc.ArraySize = 1;
+    desc.Usage = D3D11_USAGE_DEFAULT;
+    desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+    desc.CPUAccessFlags = 0;
+    desc.MiscFlags = 0;
+    if (m_useMSAA && m_numQualityLevels > 0) {
+        desc.SampleDesc.Count = 4;
+        desc.SampleDesc.Quality = m_numQualityLevels - 1;
+    } else {
+        desc.SampleDesc.Count = 1;
+        desc.SampleDesc.Quality = 0;
+    }
+    desc.Format = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    ComPtr<ID3D11Texture2D> depthStencilBuffer;
+    ThrowIfFailed(m_device->CreateTexture2D(&desc, 0, depthStencilBuffer.GetAddressOf()));
+    ThrowIfFailed(m_device->CreateDepthStencilView(depthStencilBuffer.Get(), NULL,
+                                                   m_depthStencilView.GetAddressOf()));
+
+    // Depth 전용
+    desc.Format = DXGI_FORMAT_R32_TYPELESS;
+    desc.BindFlags = D3D11_BIND_DEPTH_STENCIL | D3D11_BIND_SHADER_RESOURCE;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL, m_depthOnlyBuffer.GetAddressOf()));
+
+    // 그림자 Buffers (Depth 전용)
+    desc.Width = m_shadowWidth;
+    desc.Height = m_shadowHeight;
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+        ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL, m_shadowBuffers[i].GetAddressOf()));
+    }
+
+    D3D11_DEPTH_STENCIL_VIEW_DESC dsvDesc;
+    ZeroMemory(&dsvDesc, sizeof(dsvDesc));
+    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    dsvDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+    ThrowIfFailed(m_device->CreateDepthStencilView(m_depthOnlyBuffer.Get(), &dsvDesc,
+                                                   m_depthOnlyDSV.GetAddressOf()));
+
+    // 그림자 DSVs
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+        ThrowIfFailed(m_device->CreateDepthStencilView(m_shadowBuffers[i].Get(), &dsvDesc,
+                                                       m_shadowDSVs[i].GetAddressOf()));
+    }
+
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+    ZeroMemory(&srvDesc, sizeof(srvDesc));
+    srvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    ThrowIfFailed(m_device->CreateShaderResourceView(m_depthOnlyBuffer.Get(), &srvDesc,
+                                                     m_depthOnlySRV.GetAddressOf()));
+
+    // 그림자 SRVs
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+        ThrowIfFailed(m_device->CreateShaderResourceView(m_shadowBuffers[i].Get(), &srvDesc,
+                                                         m_shadowSRVs[i].GetAddressOf()));
+    }
+}
 // ---- 신규: PSO 한 번에 적용 ----
 void EngineBase::SetPipelineState(const GraphicsPSO &pso) {
     m_context->VSSetShader(pso.m_vertexShader.Get(), 0, 0);
@@ -287,8 +368,7 @@ bool EngineBase::InitDirect3D() {
     // ---- 핵심 변화: 기존 RS/DSS/BS 개별 생성 코드 전부 삭제, 이 한 줄로 대체 ----
     Graphics::InitCommonStates(m_device);
 
-    CreateBuffers();
-
+       CreateBuffers();
     ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
     m_screenViewport.TopLeftX = 0;
     m_screenViewport.TopLeftY = 0;
@@ -301,6 +381,16 @@ bool EngineBase::InitDirect3D() {
     // ---- 신규: GlobalConstants 버퍼 생성 ----
     D3D11Utils::CreateConstBuffer(m_device, m_globalConstsCPU, m_globalConstsGPU);
     D3D11Utils::CreateConstBuffer(m_device, m_reflectGlobalConstsCPU, m_reflectGlobalConstsGPU);
+
+
+     // 그림자맵 렌더링할 때 사용할 GlobalConsts들 별도 생성
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+        D3D11Utils::CreateConstBuffer(m_device, m_shadowGlobalConstsCPU[i],
+                                      m_shadowGlobalConstsGPU[i]);
+    }
+
+    //// 후처리 효과용 ConstBuffer
+    //D3D11Utils::CreateConstBuffer(m_device, m_postEffectsConstsCPU, m_postEffectsConstsGPU);
 
     return true;
 }
@@ -321,7 +411,34 @@ bool EngineBase::InitGUI() {
     }
     return true;
 }
+void EngineBase::SetMainViewport() {
 
+    // Set the viewport
+    ZeroMemory(&m_screenViewport, sizeof(D3D11_VIEWPORT));
+    m_screenViewport.TopLeftX = 0;
+    m_screenViewport.TopLeftY = 0;
+    m_screenViewport.Width = float(m_screenWidth);
+    m_screenViewport.Height = float(m_screenHeight);
+    m_screenViewport.MinDepth = 0.0f;
+    m_screenViewport.MaxDepth = 1.0f;
+
+    m_context->RSSetViewports(1, &m_screenViewport);
+}
+
+void EngineBase::SetShadowViewport() {
+
+    // Set the viewport
+    D3D11_VIEWPORT shadowViewport;
+    ZeroMemory(&shadowViewport, sizeof(D3D11_VIEWPORT));
+    shadowViewport.TopLeftX = 0;
+    shadowViewport.TopLeftY = 0;
+    shadowViewport.Width = float(m_shadowWidth);
+    shadowViewport.Height = float(m_shadowHeight);
+    shadowViewport.MinDepth = 0.0f;
+    shadowViewport.MaxDepth = 1.0f;
+
+    m_context->RSSetViewports(1, &shadowViewport);
+}
 void EngineBase::CreateBuffers() {
     ComPtr<ID3D11Texture2D> backBuffer;
     ThrowIfFailed(m_swapChain->GetBuffer(0, IID_PPV_ARGS(backBuffer.GetAddressOf())));
@@ -353,9 +470,6 @@ void EngineBase::CreateBuffers() {
     ThrowIfFailed(
         m_device->CreateRenderTargetView(m_floatBuffer.Get(), NULL, m_floatRTV.GetAddressOf()));
 
-    D3D11Utils::CreateDepthBuffer(m_device, m_screenWidth, m_screenHeight,
-                                  UINT(m_useMSAA ? m_numQualityLevels : 0), m_depthStencilView);
-
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
     ThrowIfFailed(m_device->CreateTexture2D(&desc, NULL, m_resolvedBuffer.GetAddressOf()));
@@ -363,6 +477,8 @@ void EngineBase::CreateBuffers() {
                                                      m_resolvedSRV.GetAddressOf()));
     ThrowIfFailed(m_device->CreateRenderTargetView(m_resolvedBuffer.Get(), NULL,
                                                    m_resolvedRTV.GetAddressOf()));
+
+     CreateDepthBuffers();
 
     m_postProcess.Initialize(m_device, m_context, {m_resolvedSRV}, {m_backBufferRTV}, m_screenWidth,
                              m_screenHeight, 4);

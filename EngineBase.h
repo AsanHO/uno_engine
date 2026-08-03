@@ -1,18 +1,15 @@
 ﻿#pragma once
 
-#include <d3d11.h>
-#include <d3dcompiler.h>
+#include <directxtk/SimpleMath.h>
 #include <imgui.h>
 #include <imgui_impl_dx11.h>
 #include <imgui_impl_win32.h>
 #include <iostream>
 #include <vector>
-#include <windows.h>
-#include <wrl.h> // ComPtr
 
 #include "Camera.h"
-#include "ConstantBuffers.h" // BasicConstantData.h 대체
-#include "GraphicsCommon.h"
+#include "ConstantBuffers.h"
+#include "D3D11Utils.h"
 #include "GraphicsPSO.h"
 #include "PostProcess.h"
 
@@ -48,12 +45,14 @@ class EngineBase {
     // ---- 신규: 공용 IBL 텍스처 로딩 ----
     void InitCubemaps(wstring basePath, wstring envFilename, wstring specularFilename,
                       wstring irradianceFilename, wstring brdfFilename);
-
+    void CreateDepthBuffers();
   protected:
     bool InitMainWindow();
     bool InitDirect3D();
     bool InitGUI();
     void CreateBuffers();
+    void SetMainViewport();
+    void SetShadowViewport();
 
   public:
     int m_screenWidth;
@@ -64,9 +63,6 @@ class EngineBase {
     ComPtr<ID3D11DeviceContext> m_context;
     ComPtr<IDXGISwapChain> m_swapChain;
 
-    // Depth buffer (DSS 자체는 Graphics::로 이동, View만 여기 유지)
-    ComPtr<ID3D11DepthStencilView> m_depthStencilView;
-
     ComPtr<ID3D11RenderTargetView> m_backBufferRTV;
 
     ComPtr<ID3D11Texture2D> m_floatBuffer;
@@ -76,6 +72,18 @@ class EngineBase {
     ComPtr<ID3D11Texture2D> m_resolvedBuffer;
     ComPtr<ID3D11ShaderResourceView> m_resolvedSRV;
     ComPtr<ID3D11RenderTargetView> m_resolvedRTV;
+    // Depth buffer 관련
+    ComPtr<ID3D11Texture2D> m_depthOnlyBuffer; // No MSAA
+    ComPtr<ID3D11DepthStencilView> m_depthOnlyDSV;
+    ComPtr<ID3D11DepthStencilView> m_depthStencilView;
+    ComPtr<ID3D11ShaderResourceView> m_depthOnlySRV;
+
+    // Shadow maps
+    int m_shadowWidth = 1280;
+    int m_shadowHeight = 1280;
+    ComPtr<ID3D11Texture2D> m_shadowBuffers[MAX_LIGHTS]; // No MSAA
+    ComPtr<ID3D11DepthStencilView> m_shadowDSVs[MAX_LIGHTS];
+    ComPtr<ID3D11ShaderResourceView> m_shadowSRVs[MAX_LIGHTS];
 
     bool m_isDrawAsWire = false;
 
@@ -102,8 +110,10 @@ class EngineBase {
     // ---- 신규: GlobalConstants (기존 EyeViewProjConstData 대체) ----
     GlobalConstants m_globalConstsCPU;
     GlobalConstants m_reflectGlobalConstsCPU;
+    GlobalConstants m_shadowGlobalConstsCPU[MAX_LIGHTS];
     ComPtr<ID3D11Buffer> m_globalConstsGPU;
     ComPtr<ID3D11Buffer> m_reflectGlobalConstsGPU;
+    ComPtr<ID3D11Buffer> m_shadowGlobalConstsGPU[MAX_LIGHTS];
 
     // ---- 신규: 공용 IBL 텍스처 (Common.hlsli의 t10~13에 바인딩됨) ----
     ComPtr<ID3D11ShaderResourceView> m_envSRV;
@@ -113,5 +123,7 @@ class EngineBase {
 
     int m_guiWidth = 0;
     bool m_useEnv = true;
+
+    bool m_lightRotate = false;
 };
 } // namespace hlab

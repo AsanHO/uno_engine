@@ -1,11 +1,11 @@
 ﻿#pragma once
-#include <DirectXCollision.h>
 #include <algorithm>
 #include <directxtk/SimpleMath.h>
 #include <iostream>
 #include <memory>
-#include <vector>
 
+#include "GeometryGenerator.h"
+#include "ImageFilter.h"
 #include "EngineBase.h"
 #include "Model.h"
 
@@ -21,12 +21,12 @@ class UnoEngine : public EngineBase {
     virtual void UpdateGUI() override;
     virtual void Update(float dt) override;
     virtual void Render() override;
-
+    void UpdateLights(float dt);
   protected:
     shared_ptr<Model> m_mainSphere;
     shared_ptr<Model> m_skybox;
-    Light m_light;
-    shared_ptr<Model> m_lightSphere;
+    shared_ptr<Model> m_ground;
+    shared_ptr<Model> m_lightSphere[MAX_LIGHTS];
 
     bool m_usePerspectiveProjection = true;
 

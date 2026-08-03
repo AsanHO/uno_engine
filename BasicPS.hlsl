@@ -26,9 +26,7 @@ cbuffer MaterialConstants : register(b0)
     int useMetallicMap;
     int useRoughnessMap;
     int useEmissiveMap;
-    float exposure;
-    float gamma;
-    float3 dummy0;
+    float dummy;
 };
 
 float3 SchlickFresnel(float3 F0, float NdotH)
@@ -44,7 +42,7 @@ struct PixelShaderOutput
 
 float3 GetNormal(PixelShaderInput input)
 {
-    float3 normalWorld = input.normalWorld;
+    float3 normalWorld = normalize(input.normalWorld);
     
     if (useNormalMap) // NormalWorld를 교체
     {
@@ -123,6 +121,85 @@ float SchlickGGX(float NdotI, float NdotO, float roughness)
     return SchlickG1(NdotI, k) * SchlickG1(NdotO, k);
 }
 
+float3 LightRadiance(Light light, float3 posWorld, float3 normalWorld, Texture2D shadowMap)
+{
+    // Directional light
+    float3 lightVec = light.type & LIGHT_DIRECTIONAL
+                      ? -light.direction
+                      : light.position - posWorld;
+        
+    float lightDist = length(lightVec);
+    lightVec /= lightDist;
+
+    // Spot light
+    float spotFator = light.type & LIGHT_SPOT
+                     ? pow(max(-dot(lightVec, light.direction), 0.0f), light.spotPower)
+                      : 1.0f;
+        
+    // Distance attenuation
+    float att = saturate((light.fallOffEnd - lightDist)
+                         / (light.fallOffEnd - light.fallOffStart));
+
+    // Shadow map
+    float shadowFactor = 1.0;
+
+    if (light.type & LIGHT_SHADOW)
+    {
+        const float nearZ = 0.01; // 카메라 설정과 동일
+        
+        // 1. Project posWorld to light screen
+        // light.viewProj 사용
+        float4 lightScreen = mul(float4(posWorld, 1), light.viewProj);
+        lightScreen.xyz /= lightScreen.w;
+        // 2. 카메라(광원)에서 볼 때의 텍스춰 좌표 계산
+        // [-1, 1]x[-1, 1] -> [0, 1]x[0, 1]
+        // 주의: 텍스춰 좌표와 NDC는 y가 반대
+        float2 lightTexcoord = float2(lightScreen.x, -lightScreen.y);
+        lightTexcoord += 1.0;
+        lightTexcoord *= 0.5;
+        
+        // 3. 쉐도우맵에서 값 가져오기
+        float depth = shadowMap.Sample(shadowPointSampler, lightTexcoord).r;
+        
+        // 4. 가려져 있다면 그림자로 표시
+        // 힌트: 작은 bias (0.001 정도) 필요
+        if (depth + 0.001 < lightScreen.z)
+            shadowFactor = 0.0;
+        //    shadowFactor = 0.0; // <- 0.0의 의미는?
+    }
+
+    float3 radiance = light.radiance * spotFator * att * shadowFactor;
+
+    return radiance;
+}
+
+
+float3 LightRadiance(in Light light, in float3 posWorld, in float3 normalWorld)
+{
+    // Directional light
+    float3 lightVec = light.type & LIGHT_DIRECTIONAL
+                      ? -light.direction
+                      : light.position - posWorld;
+        
+    float lightDist = length(lightVec);
+    lightVec /= lightDist;
+
+    // Spot light
+    float spotFator = light.type & LIGHT_SPOT
+                     ? pow(max(-dot(lightVec, light.direction), 0.0f), light.spotPower)
+                      : 1.0f;
+        
+    // Distance attenuation
+    float att = saturate((light.fallOffEnd - lightDist)
+                         / (light.fallOffEnd - light.fallOffStart));
+
+    // Shadow map
+    float shadowFactor = 1.0;
+    float3 radiance = light.radiance * spotFator * att * shadowFactor;
+
+    return radiance;
+}
+
 PixelShaderOutput main(PixelShaderInput input)
 {
     float3 pixelToEye = normalize(eyeWorld - input.posWorld);
@@ -142,34 +219,44 @@ PixelShaderOutput main(PixelShaderInput input)
     
     float3 directLighting = float3(0, 0, 0);
 
-    // 포인트 라이트만 먼저 구현
-    [unroll]
-    for (int i = NUM_DIR_LIGHTS; i < NUM_DIR_LIGHTS + NUM_POINT_LIGHTS; ++i)
+    // 임시로 unroll 사용
+    [unroll] // warning X3550: sampler array index must be a literal expression, forcing loop to unroll
+    for (int i = 0; i < MAX_LIGHTS; ++i)
     {
-        float3 lightVec = light[i].position - input.posWorld;
-        float lightDist = length(lightVec);
-        lightVec /= lightDist;
-        float3 halfway = normalize(pixelToEye + lightVec);
+        if (lights[i].type)
+        {
+            float3 lightVec = lights[i].position - input.posWorld;
+            float lightDist = length(lightVec);
+            lightVec /= lightDist;
+            float3 halfway = normalize(pixelToEye + lightVec);
         
-        float NdotI = max(0.0, dot(normalWorld, lightVec));
-        float NdotH = max(0.0, dot(normalWorld, halfway));
-        float NdotO = max(0.0, dot(normalWorld, pixelToEye));
+            float NdotI = max(0.0, dot(normalWorld, lightVec));
+            float NdotH = max(0.0, dot(normalWorld, halfway));
+            float NdotO = max(0.0, dot(normalWorld, pixelToEye));
         
-        const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
-        float3 F0 = lerp(Fdielectric, albedo, metallic);
-        float3 F = SchlickFresnel(F0, max(0.0, dot(halfway, pixelToEye)));
-        float3 kd = lerp(float3(1, 1, 1) - F, float3(0, 0, 0), metallic);
-        float3 diffuseBRDF = kd * albedo;
+            const float3 Fdielectric = 0.04; // 비금속(Dielectric) 재질의 F0
+            float3 F0 = lerp(Fdielectric, albedo, metallic);
+            float3 F = SchlickFresnel(F0, max(0.0, dot(halfway, pixelToEye)));
+            float3 kd = lerp(float3(1, 1, 1) - F, float3(0, 0, 0), metallic);
+            float3 diffuseBRDF = kd * albedo;
 
-        float D = NdfGGX(NdotH, roughness);
-        float3 G = SchlickGGX(NdotI, NdotO, roughness);
-        float3 specularBRDF = (F * D * G) / max(1e-5, 4.0 * NdotI * NdotO);
+            float D = NdfGGX(NdotH, roughness);
+            float3 G = SchlickGGX(NdotI, NdotO, roughness);
+            float3 specularBRDF = (F * D * G) / max(1e-5, 4.0 * NdotI * NdotO);
 
-        float att = saturate((light[i].fallOffEnd - lightDist)
-                                     / (light[i].fallOffEnd - light[i].fallOffStart));
-        float3 radiance = light[i].radiance * att;
-
-        directLighting += (diffuseBRDF + specularBRDF) * radiance * NdotI;
+            float3 radiance = 0.0f;
+            
+            radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMaps[i]);
+            
+            /*if (i == 0)
+                radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap0);
+            if (i == 1)
+                radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap1);
+            if (i == 2)
+                radiance = LightRadiance(lights[i], input.posWorld, normalWorld, shadowMap2);*/
+                
+            directLighting += (diffuseBRDF + specularBRDF) * radiance * NdotI;
+        }
     }
     
     PixelShaderOutput output;

@@ -1,5 +1,5 @@
 #pragma once
-//#pragma message("D3D11Utils.h is being included from: " __FILE__)
+// #pragma message("D3D11Utils.h is being included from: " __FILE__)
 #include <d3d11.h>
 #include <d3dcompiler.h>
 #include <iostream>
@@ -8,7 +8,7 @@
 #include <vector>
 #include <windows.h>
 #include <wrl/client.h> // ComPtr
- 
+
 // AppBase와 ExampleApp을 정리하기 위해
 // 반복해서 사용되는 쉐이더 생성, 버퍼 생성 등을 분리
 // Parameter를 나열할 때 const를 앞에 두는 것이 일반적이지만
@@ -32,10 +32,6 @@ inline void ThrowIfFailed(HRESULT hr) {
 
 class D3D11Utils {
   public:
-    static void CreateDepthBuffer(ComPtr<ID3D11Device> &device, int screenWidth, int screenHeight,
-                                  UINT numQualityLevels,
-                                  ComPtr<ID3D11DepthStencilView> &depthStencilView);
-
     static void
     CreateVertexShaderAndInputLayout(ComPtr<ID3D11Device> &device, const wstring &filename,
                                      const vector<D3D11_INPUT_ELEMENT_DESC> &inputElements,

@@ -41,6 +41,7 @@ class Model {
 
     bool m_drawNormals = false;
     bool m_isVisible = true;
+    bool m_castShadow = true;
 
     std::vector<shared_ptr<Mesh>> m_meshes;
 

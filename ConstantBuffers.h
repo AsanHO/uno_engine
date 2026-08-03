@@ -3,6 +3,11 @@
 #include <directxtk/SimpleMath.h>
 
 #define MAX_LIGHTS 3
+#define LIGHT_OFF 0x00
+#define LIGHT_DIRECTIONAL 0x01
+#define LIGHT_POINT 0x02
+#define LIGHT_SPOT 0x04
+#define LIGHT_SHADOW 0x10
 
 namespace hlab {
 
@@ -67,21 +72,34 @@ __declspec(align(256)) struct MaterialConstants {
 
 // 조명
 struct Light {
-    Vector3 radiance = Vector3(0.0f); // strength
+    Vector3 radiance = Vector3(5.0f); // strength
     float fallOffStart = 0.0f;
     Vector3 direction = Vector3(0.0f, 0.0f, 1.0f);
-    float fallOffEnd = 10.0f;
+    float fallOffEnd = 20.0f;
     Vector3 position = Vector3(0.0f, 0.0f, -2.0f);
-    float spotPower = 100.0f;
+    float spotPower = 6.0f;
+
+    // Light type bitmasking
+    // ex) LIGHT_SPOT | LIGHT_SHADOW
+    uint32_t type = LIGHT_OFF;
+    float radius = 0.0f; // 반지름
+    Vector2 dummy;
+
+    Matrix viewProj; // 그림자 렌더링에 필요
+    Matrix invProj;  // 그림자 렌더링 디버깅용
 };
 
 // register(b1) 사용
 __declspec(align(256)) struct GlobalConstants {
     Matrix view;
     Matrix proj;
+    Matrix invProj;
     Matrix viewProj;
+    Matrix invViewProj;
+
     Vector3 eyeWorld;
     float strengthIBL = 1.0f;
+
     int textureToDraw = 0;   // 0: Env, 1: Specular, 2: Irradiance, 그외: 검은색
     float envLodBias = 0.0f; // 환경맵 LodBias
     float lodBias = 2.0f;    // 다른 물체들 LodBias

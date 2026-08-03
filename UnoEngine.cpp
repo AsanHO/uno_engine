@@ -31,26 +31,25 @@ bool UnoEngine::Initialize() {
         m_skybox = make_shared<Model>(m_device, m_context, vector{skyboxMesh});
     }
 
-    // 조명 설정
+    // 바닥(거울)
     {
-        m_light.position = Vector3(0.0f, 0.5f, 1.7f);
-        m_light.radiance = Vector3(5.0f);
-        m_light.fallOffEnd = 20.0f;
-    }
+        auto mesh = GeometryGenerator::MakeSquare(5.0);
+        // mesh.albedoTextureFilename =
+        //     "../Assets/Textures/blender_uv_grid_2k.png";
+        m_ground = make_shared<Model>(m_device, m_context, vector{mesh});
+        m_ground->m_materialConstsCPU.albedoFactor = Vector3(0.1f);
+        m_ground->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
+        m_ground->m_materialConstsCPU.metallicFactor = 0.5f;
+        m_ground->m_materialConstsCPU.roughnessFactor = 0.3f;
 
-    // 거울
-    {
-        auto mesh = GeometryGenerator::MakeSquare(1.0f);
-        m_mirror = make_shared<Model>(m_device, m_context, vector{mesh});
-        m_mirror->m_materialConstsCPU.albedoFactor = Vector3(0.3f);
-        m_mirror->m_materialConstsCPU.metallicFactor = 0.7f;
-        m_mirror->m_materialConstsCPU.roughnessFactor = 0.2f;
+        Vector3 position = Vector3(0.0f, -0.5f, 2.0f);
+        m_ground->UpdateWorldRow(Matrix::CreateRotationX(3.141592f * 0.5f) *
+                                 Matrix::CreateTranslation(position));
 
-        Vector3 mirrorPos(0.5f, 0.25f, 2.0f);
-        m_mirror->UpdateWorldRow(Matrix::CreateRotationY(3.141592f * 0.5f) *
-                                 Matrix::CreateTranslation(mirrorPos));
+        m_mirrorPlane = SimpleMath::Plane(position, Vector3(0.0f, 1.0f, 0.0f));
+        m_mirror = m_ground; // 바닥에 거울처럼 반사 구현
 
-        m_mirrorPlane = DirectX::SimpleMath::Plane(mirrorPos, Vector3(-1.0f, 0.0f, 0.0f));
+        // m_basicList.push_back(m_ground); // 거울은 리스트에 등록 X
     }
 
     // Main Sphere
@@ -80,16 +79,56 @@ bool UnoEngine::Initialize() {
 
         m_basicList.push_back(m_mainSphere);
     }
+    // 추가 물체1
+    {
+        MeshData mesh = GeometryGenerator::MakeSphere(0.2f, 200, 200);
+        Vector3 center(0.5f, 0.5f, 2.0f);
+        auto m_obj = make_shared<Model>(m_device, m_context, vector{mesh});
+        m_obj->UpdateWorldRow(Matrix::CreateTranslation(center));
+        m_obj->m_materialConstsCPU.albedoFactor = Vector3(0.1f, 0.1f, 1.0f);
+        m_obj->m_materialConstsCPU.roughnessFactor = 0.2f;
+        m_obj->m_materialConstsCPU.metallicFactor = 0.6f;
+        m_obj->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
+        m_obj->UpdateConstantBuffers(m_device, m_context);
+
+        m_basicList.push_back(m_obj);
+    }
+
+    // 조명 설정
+    {
+        // 조명 0은 고정
+        m_globalConstsCPU.lights[0].radiance = Vector3(5.0f);
+        m_globalConstsCPU.lights[0].position = Vector3(0.0f, 1.5f, 1.5f);
+        m_globalConstsCPU.lights[0].direction = Vector3(0.0f, -1.0f, 0.0f);
+        m_globalConstsCPU.lights[0].spotPower = 6.0f;
+        m_globalConstsCPU.lights[0].type = LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+
+        // 조명 1의 위치와 방향은 Update()에서 설정
+        m_globalConstsCPU.lights[1].radiance = Vector3(5.0f);
+        m_globalConstsCPU.lights[1].spotPower = 6.0f;
+        m_globalConstsCPU.lights[1].fallOffEnd = 20.0f;
+        m_globalConstsCPU.lights[1].type = LIGHT_SPOT | LIGHT_SHADOW; // Point with shadow
+
+        // 조명 2는 꺼놓음
+        m_globalConstsCPU.lights[2].type = LIGHT_OFF;
+    }
 
     // 조명 위치 표시
     {
-        MeshData sphere = GeometryGenerator::MakeSphere(0.01f, 10, 10);
-        m_lightSphere = make_shared<Model>(m_device, m_context, vector{sphere});
-        m_lightSphere->UpdateWorldRow(Matrix::CreateTranslation(m_light.position));
-        m_lightSphere->m_materialConstsCPU.albedoFactor = Vector3(0.0f);
-        m_lightSphere->m_materialConstsCPU.emissionFactor = Vector3(1.0f, 1.0f, 0.0f);
+        for (int i = 0; i < MAX_LIGHTS; i++) {
+            MeshData sphere = GeometryGenerator::MakeSphere(1.0f, 20, 20);
+            m_lightSphere[i] = make_shared<Model>(m_device, m_context, vector{sphere});
+            m_lightSphere[i]->UpdateWorldRow(
+                Matrix::CreateTranslation(m_globalConstsCPU.lights[i].position));
+            m_lightSphere[i]->m_materialConstsCPU.albedoFactor = Vector3(0.0f);
+            m_lightSphere[i]->m_materialConstsCPU.emissionFactor = Vector3(1.0f, 1.0f, 0.0f);
+            m_lightSphere[i]->m_castShadow = false; // 조명 표시 물체들은 그림자 X
 
-        m_basicList.push_back(m_lightSphere); // 리스트에 등록
+            if (m_globalConstsCPU.lights[i].type == 0)
+                m_lightSphere[i]->m_isVisible = false;
+
+            m_basicList.push_back(m_lightSphere[i]); // 리스트에 등록
+        }
     }
 
     // 커서 표시
@@ -114,7 +153,7 @@ void UnoEngine::Update(float dt) {
     Matrix projRow = m_camera.GetProjRow();
 
     // 조명 설정 (GlobalConstants에 딱 한 번만!)
-    m_globalConstsCPU.lights[1] = m_light;
+    UpdateLights(dt);
 
     EngineBase::UpdateGlobalConstants(eyeWorld, viewRow, projRow, reflectionRow);
 
@@ -122,7 +161,10 @@ void UnoEngine::Update(float dt) {
     m_mirror->UpdateConstantBuffers(m_device, m_context);
 
     // 조명의 위치 반영
-    m_lightSphere->UpdateWorldRow(Matrix::CreateTranslation(m_light.position));
+    for (int i = 0; i < MAX_LIGHTS; i++)
+        m_lightSphere[i]->UpdateWorldRow(
+            Matrix::CreateScale((std::max)(0.01f, m_globalConstsCPU.lights[i].radius)) *
+            Matrix::CreateTranslation(m_globalConstsCPU.lights[i].position));
 
     // ---- Picking 로직 (동일한 알고리즘, Model API로 교체) ----
     static float prevRatio = 0.0f;
@@ -222,7 +264,7 @@ void UnoEngine::Update(float dt) {
     }
 }
 void UnoEngine::Render() {
-    m_context->RSSetViewports(1, &m_screenViewport);
+    UnoEngine::SetMainViewport();
 
     // 공용 샘플러 바인딩 (Common.hlsli의 s0, s1)
     m_context->VSSetSamplers(0, UINT(Graphics::sampleStates.size()), Graphics::sampleStates.data());
@@ -234,58 +276,119 @@ void UnoEngine::Render() {
     m_context->PSSetShaderResources(10, UINT(commonSRVs.size()), commonSRVs.data());
 
     const float clearColor[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-    m_context->ClearRenderTargetView(m_floatRTV.Get(), clearColor);
+    vector<ID3D11RenderTargetView *> rtvs = {m_floatRTV.Get()};
+     // Depth Only Pass (RTS 생략 가능)
+    m_context->OMSetRenderTargets(0, NULL, m_depthOnlyDSV.Get());
+    m_context->ClearDepthStencilView(m_depthOnlyDSV.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+    EngineBase::SetPipelineState(Graphics::depthOnlyPSO);
+    EngineBase::SetGlobalConsts(m_globalConstsGPU);
+    for (auto &i : m_basicList)
+        i->Render(m_context);
+    m_skybox->Render(m_context);
+    m_mirror->Render(m_context);
+
+    // 그림자맵 만들기
+    EngineBase::SetShadowViewport(); // 그림자맵 해상도
+    EngineBase::SetPipelineState(Graphics::depthOnlyPSO);
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+        if (m_globalConstsCPU.lights[i].type & LIGHT_SHADOW) {
+            // RTS 생략 가능
+            m_context->OMSetRenderTargets(0, NULL, m_shadowDSVs[i].Get());
+            m_context->ClearDepthStencilView(m_shadowDSVs[i].Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
+            EngineBase::SetGlobalConsts(m_shadowGlobalConstsGPU[i]);
+            for (auto &i : m_basicList)
+                if (i->m_castShadow && i->m_isVisible)
+                    i->Render(m_context);
+            m_skybox->Render(m_context);
+            m_mirror->Render(m_context);
+        }
+    }
+
+    // 다시 렌더링 해상도로 되돌리기
+    EngineBase::SetMainViewport();
+
+     // 거울 1. 거울은 빼고 원래 대로 그리기
+    for (size_t i = 0; i < rtvs.size(); i++) {
+        m_context->ClearRenderTargetView(rtvs[i], clearColor);
+    }
+    m_context->OMSetRenderTargets(UINT(rtvs.size()), rtvs.data(), m_depthStencilView.Get());
+
+    // 그림자맵들도 공용 텍스춰들 이후에 추가
+    // 주의: 마지막 shadowDSV를 RenderTarget에서 해제한 후 설정
+    vector<ID3D11ShaderResourceView *> shadowSRVs;
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+        shadowSRVs.push_back(m_shadowSRVs[i].Get());
+    }
+    m_context->PSSetShaderResources(15, UINT(shadowSRVs.size()), shadowSRVs.data());
+
     m_context->ClearDepthStencilView(m_depthStencilView.Get(),
                                      D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
-    m_context->OMSetRenderTargets(1, m_floatRTV.GetAddressOf(), m_depthStencilView.Get());
-
-    /* 1단계: 거울 제외 일반 렌더링 */
-    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::defaultWirePSO
-                                                : Graphics::defaultSolidPSO);
+    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::defaultWirePSO : Graphics::defaultSolidPSO);
     EngineBase::SetGlobalConsts(m_globalConstsGPU);
 
     for (auto &i : m_basicList) {
         i->Render(m_context);
     }
 
-    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::skyboxWirePSO
-                                                : Graphics::skyboxSolidPSO);
+    EngineBase::SetPipelineState(Graphics::normalsPSO);
+    for (auto &i : m_basicList) {
+        if (i->m_drawNormals)
+            i->RenderNormals(m_context);
+    }
+
+    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::skyboxWirePSO : Graphics::skyboxSolidPSO);
+
     m_skybox->Render(m_context);
 
-    /* 2단계: 거울 위치만 Stencil에 표시 (Stencil만 새로 클리어, Depth는 유지) */
-    m_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_STENCIL, 1.0f, 0);
+    // 거울 2. 거울 위치만 StencilBuffer에 1로 표기
     EngineBase::SetPipelineState(Graphics::stencilMaskPSO);
+
     m_mirror->Render(m_context);
 
-    /* 3단계: 반사된 물체 렌더링 (Depth는 지우지 않음!) */
-    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::reflectWirePSO
-                                                : Graphics::reflectSolidPSO);
+    // 거울 3. 거울 위치에 반사된 물체들을 렌더링
+    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::reflectWirePSO : Graphics::reflectSolidPSO);
     EngineBase::SetGlobalConsts(m_reflectGlobalConstsGPU);
+
+    m_context->ClearDepthStencilView(m_depthStencilView.Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
 
     for (auto &i : m_basicList) {
         i->Render(m_context);
     }
 
     EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::reflectSkyboxWirePSO
-                                                : Graphics::reflectSkyboxSolidPSO);
+                                           : Graphics::reflectSkyboxSolidPSO);
     m_skybox->Render(m_context);
 
-    /* 4단계: 거울 자체를 블렌딩으로 그림 */
+    // 거울 4. 거울 자체의 재질을 "Blend"로 그림
     EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::mirrorBlendWirePSO
-                                                : Graphics::mirrorBlendSolidPSO);
-    const float blendColor[4] = {m_mirrorAlpha, m_mirrorAlpha, m_mirrorAlpha, 1.0f};
-    if (m_isDrawAsWire)
-        Graphics::mirrorBlendWirePSO.SetBlendFactor(blendColor);
-    else
-        Graphics::mirrorBlendSolidPSO.SetBlendFactor(blendColor);
-    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::mirrorBlendWirePSO
-                                                : Graphics::mirrorBlendSolidPSO);
+                                           : Graphics::mirrorBlendSolidPSO);
     EngineBase::SetGlobalConsts(m_globalConstsGPU);
+
     m_mirror->Render(m_context);
 
-    /* 후처리 */
     m_context->ResolveSubresource(m_resolvedBuffer.Get(), 0, m_floatBuffer.Get(), 0,
                                   DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+    // PostEffects
+    //EngineBase::SetPipelineState(Graphics::postEffectsPSO);
+
+    // vector<ID3D11ShaderResourceView *> postEffectsSRVs =
+    // {m_resolvedSRV.Get(),
+    //                                                       m_depthOnlySRV.Get()};
+    // EngineBase::SetGlobalConsts(m_globalConstsGPU);
+
+    // 그림자맵 확인용 임시
+    EngineBase::SetGlobalConsts(m_shadowGlobalConstsGPU[1]);
+    //vector<ID3D11ShaderResourceView *> postEffectsSRVs = {m_resolvedSRV.Get(),
+    //                                                      m_shadowSRVs[1].Get()};
+
+    //// 20번에 넣어줌
+    //m_context->PSSetShaderResources(20, UINT(postEffectsSRVs.size()), postEffectsSRVs.data());
+    //m_context->OMSetRenderTargets(1, m_postEffectsRTV.GetAddressOf(), NULL);
+    //m_context->PSSetConstantBuffers(3, 1, m_postEffectsConstsGPU.GetAddressOf());
+    //m_screenSquare->Render(m_context);
+
+    // 단순 이미지 처리와 블룸
     EngineBase::SetPipelineState(Graphics::postProcessingPSO);
     m_postProcess.Render(m_context);
 }
@@ -346,8 +449,9 @@ void UnoEngine::UpdateGUI() {
     }
 
     ImGui::SetNextItemOpen(true, ImGuiCond_Once);
-    if (ImGui::TreeNode("Point Light")) {
-        ImGui::SliderFloat3("Position", &m_light.position.x, -5.0f, 5.0f);
+    if (ImGui::TreeNode("Light")) {
+        ImGui::SliderFloat3("Position", &m_globalConstsCPU.lights[0].position.x, -5.0f, 5.0f);
+        ImGui::SliderFloat("Radius", &m_globalConstsCPU.lights[0].radius, 0.0f, 0.5f);
         ImGui::TreePop();
     }
 
@@ -384,6 +488,52 @@ void UnoEngine::UpdateGUI() {
         ImGui::Checkbox("Draw Normals", &m_mainSphere->m_drawNormals);
 
         ImGui::TreePop();
+    }
+}
+void UnoEngine::UpdateLights(float dt) {
+
+    // 회전하는 lights[1] 업데이트
+    static Vector3 lightDev = Vector3(0.8f, 0.0f, 0.0f);
+    if (m_lightRotate) {
+        lightDev = Vector3::Transform(lightDev, Matrix::CreateRotationY(dt * 3.141592f * 0.5f));
+    }
+    m_globalConstsCPU.lights[1].position = Vector3(0.0f, 0.5f, 2.0f) + lightDev;
+    Vector3 focusPosition = Vector3(0.0f, -0.5f, 1.7f);
+    m_globalConstsCPU.lights[1].direction = focusPosition - m_globalConstsCPU.lights[1].position;
+    m_globalConstsCPU.lights[1].direction.Normalize();
+
+    // 그림자맵을 만들기 위한 시점
+    for (int i = 0; i < MAX_LIGHTS; i++) {
+        const auto &light = m_globalConstsCPU.lights[i];
+        if (light.type & LIGHT_SHADOW) {
+
+            Vector3 up = Vector3(0.0f, 1.0f, 0.0f);
+            if (abs(up.Dot(light.direction) + 1.0f) < 1e-5)
+                up = Vector3(1.0f, 0.0f, 0.0f);
+
+            // 그림자맵을 만들 때 필요
+            Matrix lightViewRow =
+                XMMatrixLookAtLH(light.position, light.position + light.direction, up);
+
+            Matrix lightProjRow =
+                XMMatrixPerspectiveFovLH(XMConvertToRadians(120.0f), 1.0f, 0.01f, 100.0f);
+
+            m_shadowGlobalConstsCPU[i].eyeWorld = light.position;
+            m_shadowGlobalConstsCPU[i].view = lightViewRow.Transpose();
+            m_shadowGlobalConstsCPU[i].proj = lightProjRow.Transpose();
+            m_shadowGlobalConstsCPU[i].invProj = lightProjRow.Invert().Transpose();
+            m_shadowGlobalConstsCPU[i].viewProj = (lightViewRow * lightProjRow).Transpose();
+
+            D3D11Utils::UpdateBuffer(m_device, m_context, m_shadowGlobalConstsCPU[i],
+                                     m_shadowGlobalConstsGPU[i]);
+
+            // 그림자를 실제로 렌더링할 때 필요
+            m_globalConstsCPU.lights[i].viewProj = m_shadowGlobalConstsCPU[i].viewProj;
+            m_globalConstsCPU.lights[i].invProj = m_shadowGlobalConstsCPU[i].invProj;
+
+            // 반사된 장면에서도 그림자를 그리고 싶다면 조명도 반사시켜서
+            // 넣어주면 됩니다.
+        }
     }
 }
 } // namespace hlab

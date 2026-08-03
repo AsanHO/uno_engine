@@ -29,6 +29,8 @@ ComPtr<ID3D11VertexShader> basicVS;
 ComPtr<ID3D11VertexShader> skyboxVS;
 ComPtr<ID3D11VertexShader> samplingVS;
 ComPtr<ID3D11VertexShader> normalVS;
+ComPtr<ID3D11VertexShader> depthOnlyVS;
+
 
 ComPtr<ID3D11PixelShader> basicPS;
 ComPtr<ID3D11PixelShader> skyboxPS;
@@ -36,6 +38,7 @@ ComPtr<ID3D11PixelShader> combinePS;
 ComPtr<ID3D11PixelShader> bloomDownPS;
 ComPtr<ID3D11PixelShader> bloomUpPS;
 ComPtr<ID3D11PixelShader> normalPS;
+ComPtr<ID3D11PixelShader> depthOnlyPS;
 ComPtr<ID3D11PixelShader> simplePS;
 
 ComPtr<ID3D11GeometryShader> normalGS;
@@ -59,6 +62,7 @@ GraphicsPSO skyboxWirePSO;
 GraphicsPSO reflectSkyboxSolidPSO;
 GraphicsPSO reflectSkyboxWirePSO;
 GraphicsPSO normalsPSO;
+GraphicsPSO depthOnlyPSO;
 GraphicsPSO postProcessingPSO;
 
 } // namespace Graphics
@@ -250,6 +254,9 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
 
     D3D11Utils::CreateVertexShaderAndInputLayout(device, L"SkyboxVS.hlsl", skyboxIE, skyboxVS,
                                                  skyboxIL);
+    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"DepthOnlyVS.hlsl", basicIEs, depthOnlyVS,
+                                                 skyboxIL);
+
 
     D3D11Utils::CreatePixelShader(device, L"BasicPS.hlsl", basicPS);
     D3D11Utils::CreatePixelShader(device, L"NormalPS.hlsl", normalPS);
@@ -258,7 +265,8 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreatePixelShader(device, L"BloomDownPS.hlsl", bloomDownPS);
     D3D11Utils::CreatePixelShader(device, L"BloomUpPS.hlsl", bloomUpPS);
     D3D11Utils::CreatePixelShader(device, L"SimplePS.hlsl", simplePS);
-
+    D3D11Utils::CreatePixelShader(device, L"DepthOnlyPS.hlsl", depthOnlyPS);
+    
     D3D11Utils::CreateGeometryShader(device, L"NormalGS.hlsl", normalGS);
 }
 
@@ -331,6 +339,12 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     normalsPSO.m_geometryShader = normalGS;
     normalsPSO.m_pixelShader = normalPS;
     normalsPSO.m_primitiveTopology = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST;
+
+    // depthOnlyPSO
+    depthOnlyPSO = defaultSolidPSO;
+    depthOnlyPSO.m_vertexShader = depthOnlyVS;
+    depthOnlyPSO.m_pixelShader = depthOnlyPS;
+
 
     // postProcessingPSO
     postProcessingPSO.m_vertexShader = samplingVS;

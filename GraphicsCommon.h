@@ -32,12 +32,14 @@ extern ComPtr<ID3D11VertexShader> basicVS;
 extern ComPtr<ID3D11VertexShader> skyboxVS;
 extern ComPtr<ID3D11VertexShader> samplingVS;
 extern ComPtr<ID3D11VertexShader> normalVS;
+extern ComPtr<ID3D11VertexShader> depthOnlyVS;
 extern ComPtr<ID3D11PixelShader> basicPS;
 extern ComPtr<ID3D11PixelShader> skyboxPS;
 extern ComPtr<ID3D11PixelShader> combinePS;
 extern ComPtr<ID3D11PixelShader> bloomDownPS;
 extern ComPtr<ID3D11PixelShader> bloomUpPS;
 extern ComPtr<ID3D11PixelShader> normalPS;
+extern ComPtr<ID3D11PixelShader> depthOnlyPS;
 extern ComPtr<ID3D11PixelShader> simplePS;
 extern ComPtr<ID3D11GeometryShader> normalGS;
 
@@ -63,6 +65,7 @@ extern GraphicsPSO skyboxWirePSO;
 extern GraphicsPSO reflectSkyboxSolidPSO;
 extern GraphicsPSO reflectSkyboxWirePSO;
 extern GraphicsPSO normalsPSO;
+extern GraphicsPSO depthOnlyPSO;
 extern GraphicsPSO postProcessingPSO;
 
 void InitCommonStates(ComPtr<ID3D11Device> &device);
