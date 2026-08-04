@@ -4,6 +4,10 @@ namespace hlab {
 
 void PhysicsBody::Update(float dt, float floorHeight) {
     const Vector3 gravity(0.0f, -9.8f, 0.0f);
+    
+    // 중력 적분 (Explicit Euler)
+    //position += velocity * dt;
+    //velocity += gravity * dt;
 
     // 중력 적분 (semi-implicit Euler)
     velocity += gravity * dt;
