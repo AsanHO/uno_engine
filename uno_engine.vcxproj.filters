@@ -55,6 +55,7 @@
     <ClCompile Include="ImageFilter.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ModelLoader.cpp" />
+    <ClCompile Include="PhysicsBody.cpp" />
     <ClCompile Include="PostProcess.cpp" />
     <ClCompile Include="UnoEngine.cpp" />
     <ClCompile Include="Model.cpp" />
@@ -72,6 +73,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="MeshData.h" />
     <ClInclude Include="ModelLoader.h" />
+    <ClInclude Include="PhysicsBody.h" />
     <ClInclude Include="PostProcess.h" />
     <ClInclude Include="UnoEngine.h" />
     <ClInclude Include="Vertex.h" />

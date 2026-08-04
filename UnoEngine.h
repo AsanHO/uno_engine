@@ -8,6 +8,7 @@
 #include "ImageFilter.h"
 #include "EngineBase.h"
 #include "Model.h"
+#include "PhysicsBody.h"
 
 namespace hlab {
 
@@ -33,6 +34,7 @@ class UnoEngine : public EngineBase {
    
     // 유저 인터랙션
     BoundingSphere m_mainBoundingSphere;
+    PhysicsBody m_mainPhysicsBody; // mainSphere 물리 (드래그 중엔 정지, 놓으면 중력/바닥충돌 적용)
     shared_ptr<Model> m_cursorSphere;
 
     // 거울
@@ -42,5 +44,10 @@ class UnoEngine : public EngineBase {
 
     // 거울 제외 물체 리스트
     vector<shared_ptr<Model>> m_basicList;
+
+    // 물리 데모 (1단계: 구 1개 + 중력 + 바닥 충돌)
+    shared_ptr<Model> m_physicsSphere;
+    PhysicsBody m_physicsBody;
+    float m_floorHeight = -0.5f;
 };
 } // namespace hlab

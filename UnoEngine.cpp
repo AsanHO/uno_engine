@@ -77,6 +77,11 @@ bool UnoEngine::Initialize() {
 
         m_mainBoundingSphere = BoundingSphere(center, radius);
 
+        m_mainPhysicsBody.position = center;
+        m_mainPhysicsBody.radius = radius;
+        m_mainPhysicsBody.velocity = Vector3(0.0f);
+        m_mainPhysicsBody.restitution = 0.8f;
+
         m_basicList.push_back(m_mainSphere);
     }
     // 추가 물체1
@@ -92,6 +97,24 @@ bool UnoEngine::Initialize() {
         m_obj->UpdateConstantBuffers(m_device, m_context);
 
         m_basicList.push_back(m_obj);
+    }
+
+    // 물리 데모 (1단계: 구 1개, 중력 + 바닥 충돌)
+    {
+        m_physicsBody.radius = 0.15f;
+        m_physicsBody.position = Vector3(0.0f, 2.5f, 1.5f);
+        m_physicsBody.velocity = Vector3(0.0f, 0.0f, 0.0f);
+        m_physicsBody.restitution = 0.6f;
+
+        MeshData mesh = GeometryGenerator::MakeSphere(m_physicsBody.radius, 50, 50);
+        m_physicsSphere = make_shared<Model>(m_device, m_context, vector{mesh});
+        m_physicsSphere->UpdateWorldRow(Matrix::CreateTranslation(m_physicsBody.position));
+        m_physicsSphere->m_materialConstsCPU.albedoFactor = Vector3(1.0f, 0.2f, 0.1f);
+        m_physicsSphere->m_materialConstsCPU.roughnessFactor = 0.3f;
+        m_physicsSphere->m_materialConstsCPU.metallicFactor = 0.1f;
+        m_physicsSphere->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
+
+        m_basicList.push_back(m_physicsSphere);
     }
 
     // 조명 설정
@@ -154,6 +177,10 @@ void UnoEngine::Update(float dt) {
 
     // 조명 설정 (GlobalConstants에 딱 한 번만!)
     UpdateLights(dt);
+
+    // 물리 데모 업데이트 (1단계: 중력 + 바닥 충돌)
+    m_physicsBody.Update(dt, m_floorHeight);
+    m_physicsSphere->UpdateWorldRow(Matrix::CreateTranslation(m_physicsBody.position));
 
     EngineBase::UpdateGlobalConstants(eyeWorld, viewRow, projRow, reflectionRow);
 
@@ -253,9 +280,21 @@ void UnoEngine::Update(float dt) {
     }
 
     Vector3 translation = m_mainSphere->m_worldRow.Translation();
+
+    if (m_rightButton) {
+        // 드래그 중: 사용자가 직접 위치를 조작 (물리는 일시정지, 속도 초기화)
+        translation += dragTranslation;
+        m_mainPhysicsBody.position = translation;
+        m_mainPhysicsBody.velocity = Vector3(0.0f);
+    } else {
+        // 드래그를 놓으면 중력 + 바닥 충돌 시뮬레이션 재개
+        m_mainPhysicsBody.Update(dt, m_floorHeight);
+        translation = m_mainPhysicsBody.position;
+    }
+
     m_mainSphere->m_worldRow.Translation(Vector3(0.0f));
     m_mainSphere->UpdateWorldRow(m_mainSphere->m_worldRow * Matrix::CreateFromQuaternion(q) *
-                                 Matrix::CreateTranslation(dragTranslation + translation));
+                                 Matrix::CreateTranslation(translation));
     m_mainBoundingSphere.Center = m_mainSphere->m_worldRow.Translation();
 
     // 모든 오브젝트 constant buffer 갱신 (조명은 이미 GlobalConstants에 있음)
