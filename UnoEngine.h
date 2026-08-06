@@ -45,9 +45,10 @@ class UnoEngine : public EngineBase {
     // 거울 제외 물체 리스트
     vector<shared_ptr<Model>> m_basicList;
 
-    // 물리 데모 (1단계: 구 1개 + 중력 + 바닥 충돌)
-    shared_ptr<Model> m_physicsSphere;
-    PhysicsBody m_physicsBody;
+    // 물리 데모 (2단계: 구 여러 개 + 중력 + 바닥 충돌 + 구-구 충돌)
+    static const int NUM_PHYSICS_SPHERES = 10;
+    shared_ptr<Model> m_physicsSphereModels[NUM_PHYSICS_SPHERES];
+    PhysicsBody m_physicsBodies[NUM_PHYSICS_SPHERES];
     float m_floorHeight = -0.5f;
 };
 } // namespace hlab

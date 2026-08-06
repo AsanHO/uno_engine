@@ -99,22 +99,39 @@ bool UnoEngine::Initialize() {
         m_basicList.push_back(m_obj);
     }
 
-    // 물리 데모 (1단계: 구 1개, 중력 + 바닥 충돌)
+    // 물리 데모 (2단계: 구 여러 개, 중력 + 바닥 충돌 + 구-구 충돌)
     {
-        m_physicsBody.radius = 0.15f;
-        m_physicsBody.position = Vector3(0.0f, 2.5f, 1.5f);
-        m_physicsBody.velocity = Vector3(0.0f, 0.0f, 0.0f);
-        m_physicsBody.restitution = 0.6f;
+        const Vector3 palette[5] = {
+            Vector3(0.85f, 0.2f, 0.2f),  // 빨강
+            Vector3(0.2f, 0.55f, 0.85f), // 파랑
+            Vector3(0.25f, 0.75f, 0.35f),// 초록
+            Vector3(0.85f, 0.65f, 0.15f),// 주황
+            Vector3(0.6f, 0.3f, 0.75f),  // 보라
+        };
 
-        MeshData mesh = GeometryGenerator::MakeSphere(m_physicsBody.radius, 50, 50);
-        m_physicsSphere = make_shared<Model>(m_device, m_context, vector{mesh});
-        m_physicsSphere->UpdateWorldRow(Matrix::CreateTranslation(m_physicsBody.position));
-        m_physicsSphere->m_materialConstsCPU.albedoFactor = Vector3(1.0f, 0.2f, 0.1f);
-        m_physicsSphere->m_materialConstsCPU.roughnessFactor = 0.3f;
-        m_physicsSphere->m_materialConstsCPU.metallicFactor = 0.1f;
-        m_physicsSphere->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
+        const int cols = 5;
+        for (int i = 0; i < NUM_PHYSICS_SPHERES; i++) {
+            const int row = i / cols;
+            const int col = i % cols;
 
-        m_basicList.push_back(m_physicsSphere);
+            auto &body = m_physicsBodies[i];
+            body.radius = 0.13f + 0.02f * float(i % 3);
+            body.position = Vector3(-1.0f + col * 0.5f, 1.5f + float(i % 4) * 0.6f,
+                                    1.4f + row * 0.5f);
+            body.velocity = Vector3(0.0f);
+            body.restitution = 0.6f;
+
+            MeshData mesh = GeometryGenerator::MakeSphere(body.radius, 40, 40);
+            auto &model = m_physicsSphereModels[i];
+            model = make_shared<Model>(m_device, m_context, vector{mesh});
+            model->UpdateWorldRow(Matrix::CreateTranslation(body.position));
+            model->m_materialConstsCPU.albedoFactor = palette[i % 5];
+            model->m_materialConstsCPU.roughnessFactor = 0.3f;
+            model->m_materialConstsCPU.metallicFactor = 0.1f;
+            model->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
+
+            m_basicList.push_back(model);
+        }
     }
 
     // 조명 설정
@@ -177,10 +194,6 @@ void UnoEngine::Update(float dt) {
 
     // 조명 설정 (GlobalConstants에 딱 한 번만!)
     UpdateLights(dt);
-
-    // 물리 데모 업데이트 (1단계: 중력 + 바닥 충돌)
-    m_physicsBody.Update(dt, m_floorHeight);
-    m_physicsSphere->UpdateWorldRow(Matrix::CreateTranslation(m_physicsBody.position));
 
     EngineBase::UpdateGlobalConstants(eyeWorld, viewRow, projRow, reflectionRow);
 
@@ -289,8 +302,26 @@ void UnoEngine::Update(float dt) {
     } else {
         // 드래그를 놓으면 중력 + 바닥 충돌 시뮬레이션 재개
         m_mainPhysicsBody.Update(dt, m_floorHeight);
-        translation = m_mainPhysicsBody.position;
     }
+
+    // 물리 구들: 중력 + 바닥 충돌
+    for (auto &body : m_physicsBodies) {
+        body.Update(dt, m_floorHeight);
+    }
+
+    // 구-구 충돌 응답 (모든 쌍 + mainSphere)
+    for (int i = 0; i < NUM_PHYSICS_SPHERES; i++) {
+        for (int j = i + 1; j < NUM_PHYSICS_SPHERES; j++) {
+            PhysicsBody::ResolveCollision(m_physicsBodies[i], m_physicsBodies[j]);
+        }
+        PhysicsBody::ResolveCollision(m_physicsBodies[i], m_mainPhysicsBody);
+    }
+
+    for (int i = 0; i < NUM_PHYSICS_SPHERES; i++) {
+        m_physicsSphereModels[i]->UpdateWorldRow(Matrix::CreateTranslation(m_physicsBodies[i].position));
+    }
+
+    translation = m_mainPhysicsBody.position; // 충돌 응답 이후 위치로 갱신
 
     m_mainSphere->m_worldRow.Translation(Vector3(0.0f));
     m_mainSphere->UpdateWorldRow(m_mainSphere->m_worldRow * Matrix::CreateFromQuaternion(q) *
