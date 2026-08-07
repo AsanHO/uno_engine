@@ -13,6 +13,7 @@ class PhysicsBody {
     Vector3 velocity; // 속도
     float radius = 0.2f;
     float restitution = 0.8f; // 반발계수 (1.0 = 완전탄성, 0.0 = 완전비탄성)
+    float friction = 0.6f;    // 마찰계수 (바닥에 닿아있는 동안 수평 속도를 감쇠, 클수록 빨리 멈춤)
 
     void Update(float dt, float floorHeight);
 

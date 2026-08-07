@@ -22,6 +22,12 @@ void PhysicsBody::Update(float dt, float floorHeight) {
         if (velocity.y < 0.0f) {
             velocity.y = -velocity.y * restitution;
         }
+
+        // 마찰: 바닥에 닿아있는 동안 수평(x, z) 속도를 감쇠 : max는 음수 방지 . 음수가 나올일은
+        // 없지만 추후 dt가 커지면 음수가 나올 수 있음
+        float frictionFactor = (std::max)(0.0f, 1.0f - friction * dt);
+        velocity.x *= frictionFactor;
+        velocity.z *= frictionFactor;
     }
 }
 
