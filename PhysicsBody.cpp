@@ -29,6 +29,19 @@ void PhysicsBody::Update(float dt, float floorHeight) {
         velocity.x *= frictionFactor;
         velocity.z *= frictionFactor;
     }
+
+    // 구르는 회전: 수평 이동 방향에 수직인 축(up × moveDir)으로, (속력/반지름)만큼 회전
+    Vector3 horizontalVelocity(velocity.x, 0.0f, velocity.z);
+    float speed = horizontalVelocity.Length();
+    if (speed > 1e-4f) {
+        Vector3 moveDir = horizontalVelocity / speed;
+        const Vector3 up(0.0f, 1.0f, 0.0f);
+        Vector3 axis = up.Cross(moveDir); // moveDir이 수평이라 이미 단위벡터
+        float angle = (speed / radius) * dt;
+
+        orientation = orientation * Quaternion::CreateFromAxisAngle(axis, angle);
+        orientation.Normalize(); // 누적 곱셈으로 인한 부동소수점 오차 방지
+    }
 }
 
 void PhysicsBody::ResolveCollision(PhysicsBody &a, PhysicsBody &b) {

@@ -318,7 +318,9 @@ void UnoEngine::Update(float dt) {
     }
 
     for (int i = 0; i < NUM_PHYSICS_SPHERES; i++) {
-        m_physicsSphereModels[i]->UpdateWorldRow(Matrix::CreateTranslation(m_physicsBodies[i].position));
+        m_physicsSphereModels[i]->UpdateWorldRow(
+            Matrix::CreateFromQuaternion(m_physicsBodies[i].orientation) *
+            Matrix::CreateTranslation(m_physicsBodies[i].position));
     }
 
     translation = m_mainPhysicsBody.position; // 충돌 응답 이후 위치로 갱신
