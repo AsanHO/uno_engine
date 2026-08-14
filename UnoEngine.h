@@ -7,6 +7,7 @@
 #include "GeometryGenerator.h"
 #include "ImageFilter.h"
 #include "EngineBase.h"
+#include "InstancedSpheres.h"
 #include "Model.h"
 #include "PhysicsBody.h"
 
@@ -46,8 +47,9 @@ class UnoEngine : public EngineBase {
     vector<shared_ptr<Model>> m_basicList;
 
     // 물리 데모 (2단계: 구 여러 개 + 중력 + 바닥 충돌 + 구-구 충돌)
+    // 렌더링은 GPU 인스턴싱으로 한 번에(InstancedSpheres), 시뮬레이션은 몸체 배열로 따로 관리
     static const int NUM_PHYSICS_SPHERES = 10;
-    shared_ptr<Model> m_physicsSphereModels[NUM_PHYSICS_SPHERES];
+    InstancedSpheres m_physicsSphereInstances;
     PhysicsBody m_physicsBodies[NUM_PHYSICS_SPHERES];
     float m_floorHeight = -0.5f;
 };

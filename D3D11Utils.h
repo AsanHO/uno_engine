@@ -9,12 +9,12 @@
 #include <windows.h>
 #include <wrl/client.h> // ComPtr
 
-// AppBaseøÕ ExampleApp¿ª ¡§∏Æ«œ±‚ ¿ß«ÿ
-// π›∫π«ÿº≠ ªÁøÎµ«¥¬ Ω¶¿Ã¥ı ª˝º∫, πˆ∆€ ª˝º∫ µÓ¿ª ∫–∏Æ
-// Parameter∏¶ ≥™ø≠«“ ∂ß const∏¶ æ’ø° µŒ¥¬ ∞Õ¿Ã ¿œπ›¿˚¿Ã¡ˆ∏∏
-// device¥¬ πÆ∏∆ªÛ¿« ¡ﬂø‰º∫ ∂ßπÆø° øπø‹∑Œ ∏« æ’ø° µ◊Ω¿¥œ¥Ÿ.
-// ∞≠¿«∞° ¡¯«‡µ«∏Èº≠ ¡∂±›æø ±‚¥…¿Ã √ﬂ∞°µÀ¥œ¥Ÿ.
-// ªÁøÎ«œ¥¬ ∞Õ¿ª ¡¶ø‹«œ∞Ì, ¡÷ºÆ√≥∏Æ
+// AppBaseÏôÄ ExampleAppÏùÑ Ï†ïÎ¶¨ÌïòÍ∏∞ ÏúÑÌï¥
+// Î∞òÎ≥µÌï¥ÏÑú ÏÇ¨Ïö©ÎêòÎäî ÏâêÏù¥Îçî ÏÉùÏÑ±, Î≤ÑÌçº ÏÉùÏÑ± Îì±ÏùÑ Î∂ÑÎ¶¨
+// ParameterÎ•º ÎÇòÏó¥Ìï† Îïå constÎ•º ÏïûÏóê ÎëêÎäî Í≤ÉÏù¥ ÏùºÎ∞òÏ†ÅÏù¥ÏßÄÎßå
+// deviceÎäî Î¨∏Îß•ÏÉÅÏùò Ï§ëÏöîÏÑ± ÎïåÎ¨∏Ïóê ÏòàÏô∏Î°ú Îß® ÏïûÏóê ÎíÄÏäµÎãàÎã§.
+// Í∞ïÏùòÍ∞Ä ÏßÑÌñâÎêòÎ©¥ÏÑú Ï°∞Í∏àÏî© Í∏∞Îä•Ïù¥ Ï∂îÍ∞ÄÎê©ÎãàÎã§.
+// ÏÇ¨Ïö©ÌïòÎäî Í≤ÉÏùÑ Ï†úÏô∏ÌïòÍ≥†, Ï£ºÏÑùÏ≤òÎ¶¨
 
 namespace hlab {
 
@@ -25,7 +25,7 @@ using std::wstring;
 
 inline void ThrowIfFailed(HRESULT hr) {
     if (FAILED(hr)) {
-        // µπˆ±Î«“ ∂ß ø©±‚ø° breakpoint º≥¡§
+        // ÎîîÎ≤ÑÍπÖÌï† Îïå Ïó¨Í∏∞Ïóê breakpoint ÏÑ§Ï†ï
         throw std::exception();
     }
 }
@@ -62,13 +62,36 @@ class D3D11Utils {
 
         D3D11_BUFFER_DESC bufferDesc;
         ZeroMemory(&bufferDesc, sizeof(bufferDesc));
-        bufferDesc.Usage = D3D11_USAGE_IMMUTABLE; // √ ±‚»≠ »ƒ ∫Ø∞ÊX
+        bufferDesc.Usage = D3D11_USAGE_IMMUTABLE; // Ï¥àÍ∏∞Ìôî ÌõÑ Î≥ÄÍ≤ΩX
         bufferDesc.ByteWidth = UINT(sizeof(T_VERTEX) * vertices.size());
         bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         bufferDesc.CPUAccessFlags = 0; // 0 if no CPU access is necessary.
         bufferDesc.StructureByteStride = sizeof(T_VERTEX);
 
-        D3D11_SUBRESOURCE_DATA vertexBufferData = {0}; // MS øπ¡¶ø°º≠ √ ±‚»≠«œ¥¬ πÊΩƒ
+        D3D11_SUBRESOURCE_DATA vertexBufferData = {0}; // MS ÏòàÏ†úÏóêÏÑú Ï¥àÍ∏∞ÌôîÌïòÎäî Î∞©Ïãù
+        vertexBufferData.pSysMem = vertices.data();
+        vertexBufferData.SysMemPitch = 0;
+        vertexBufferData.SysMemSlicePitch = 0;
+
+        ThrowIfFailed(
+            device->CreateBuffer(&bufferDesc, &vertexBufferData, vertexBuffer.GetAddressOf()));
+    }
+
+    template <typename T_VERTEX>
+    static void CreateDynamicVertexBuffer(ComPtr<ID3D11Device> &device,
+                                          const vector<T_VERTEX> &vertices,
+                                          ComPtr<ID3D11Buffer> &vertexBuffer) {
+
+        // CreateVertexBuffer(IMMUTABLE)ÏôÄ Îã¨Î¶¨ Îß§ ÌîÑÎ†àÏûÑ UpdateBuffer()Î°ú Îã§Ïãú Ïì∏ Ïàò ÏûàÎäî Î≤ÑÌçº
+        D3D11_BUFFER_DESC bufferDesc;
+        ZeroMemory(&bufferDesc, sizeof(bufferDesc));
+        bufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+        bufferDesc.ByteWidth = UINT(sizeof(T_VERTEX) * vertices.size());
+        bufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        bufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+        bufferDesc.StructureByteStride = sizeof(T_VERTEX);
+
+        D3D11_SUBRESOURCE_DATA vertexBufferData = {0};
         vertexBufferData.pSysMem = vertices.data();
         vertexBufferData.SysMemPitch = 0;
         vertexBufferData.SysMemSlicePitch = 0;
@@ -106,7 +129,7 @@ class D3D11Utils {
     static void CreateConstantBuffer(ComPtr<ID3D11Device> &device,
                                      const T_CONSTANT &constantBufferData,
                                      ComPtr<ID3D11Buffer> &constantBuffer) {
-        // ¡÷¿«:
+        // Ï£ºÏùò:
         // For a constant buffer (BindFlags of D3D11_BUFFER_DESC set to
         // D3D11_BIND_CONSTANT_BUFFER), you must set the ByteWidth value of
         // D3D11_BUFFER_DESC in multiples of 16, and less than or equal to
@@ -167,7 +190,7 @@ class D3D11Utils {
                                  const bool isCubeMap,
                                  ComPtr<ID3D11ShaderResourceView> &texResView);
 
-    // ≈ÿΩ∫√Á∏¶ ¿ÃπÃ¡ˆ ∆ƒ¿œ∑Œ ¿˙¿Â
+    // ÌÖçÏä§Ï∂∞Î•º Ïù¥ÎØ∏ÏßÄ ÌååÏùºÎ°ú Ï†ÄÏû•
     static void WriteToFile(ComPtr<ID3D11Device> &device, ComPtr<ID3D11DeviceContext> &context,
                             ComPtr<ID3D11Texture2D> &textureToWrite, const std::string filename);
 };

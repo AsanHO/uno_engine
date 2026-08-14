@@ -100,15 +100,8 @@ bool UnoEngine::Initialize() {
     }
 
     // 물리 데모 (2단계: 구 여러 개, 중력 + 바닥 충돌 + 구-구 충돌)
+    // 렌더링은 GPU 인스턴싱 1개 드로우콜로, mainSphere와 동일한 돌 PBR 재질을 공유한다
     {
-        const Vector3 palette[5] = {
-            Vector3(0.85f, 0.2f, 0.2f),  // 빨강
-            Vector3(0.2f, 0.55f, 0.85f), // 파랑
-            Vector3(0.25f, 0.75f, 0.35f),// 초록
-            Vector3(0.85f, 0.65f, 0.15f),// 주황
-            Vector3(0.6f, 0.3f, 0.75f),  // 보라
-        };
-
         const int cols = 5;
         for (int i = 0; i < NUM_PHYSICS_SPHERES; i++) {
             const int row = i / cols;
@@ -120,18 +113,9 @@ bool UnoEngine::Initialize() {
                                     1.4f + row * 0.5f);
             body.velocity = Vector3(0.0f);
             body.restitution = 0.6f;
-
-            MeshData mesh = GeometryGenerator::MakeSphere(body.radius, 40, 40);
-            auto &model = m_physicsSphereModels[i];
-            model = make_shared<Model>(m_device, m_context, vector{mesh});
-            model->UpdateWorldRow(Matrix::CreateTranslation(body.position));
-            model->m_materialConstsCPU.albedoFactor = palette[i % 5];
-            model->m_materialConstsCPU.roughnessFactor = 0.3f;
-            model->m_materialConstsCPU.metallicFactor = 0.1f;
-            model->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
-
-            m_basicList.push_back(model);
         }
+
+        m_physicsSphereInstances.Initialize(m_device, m_context, NUM_PHYSICS_SPHERES);
     }
 
     // 조명 설정
@@ -317,11 +301,7 @@ void UnoEngine::Update(float dt) {
         PhysicsBody::ResolveCollision(m_physicsBodies[i], m_mainPhysicsBody);
     }
 
-    for (int i = 0; i < NUM_PHYSICS_SPHERES; i++) {
-        m_physicsSphereModels[i]->UpdateWorldRow(
-            Matrix::CreateFromQuaternion(m_physicsBodies[i].orientation) *
-            Matrix::CreateTranslation(m_physicsBodies[i].position));
-    }
+    m_physicsSphereInstances.UpdateInstances(m_context, m_physicsBodies, NUM_PHYSICS_SPHERES);
 
     translation = m_mainPhysicsBody.position; // 충돌 응답 이후 위치로 갱신
 
@@ -356,6 +336,11 @@ void UnoEngine::Render() {
     EngineBase::SetGlobalConsts(m_globalConstsGPU);
     for (auto &i : m_basicList)
         i->Render(m_context);
+
+    EngineBase::SetPipelineState(Graphics::depthOnlyInstancedPSO);
+    m_physicsSphereInstances.Render(m_context);
+
+    EngineBase::SetPipelineState(Graphics::depthOnlyPSO); // 스카이박스/거울은 인스턴싱 아닌 기본 레이아웃
     m_skybox->Render(m_context);
     m_mirror->Render(m_context);
 
@@ -368,9 +353,15 @@ void UnoEngine::Render() {
             m_context->OMSetRenderTargets(0, NULL, m_shadowDSVs[i].Get());
             m_context->ClearDepthStencilView(m_shadowDSVs[i].Get(), D3D11_CLEAR_DEPTH, 1.0f, 0);
             EngineBase::SetGlobalConsts(m_shadowGlobalConstsGPU[i]);
+            EngineBase::SetPipelineState(Graphics::depthOnlyPSO);
             for (auto &i : m_basicList)
                 if (i->m_castShadow && i->m_isVisible)
                     i->Render(m_context);
+
+            EngineBase::SetPipelineState(Graphics::depthOnlyInstancedPSO);
+            m_physicsSphereInstances.Render(m_context);
+
+            EngineBase::SetPipelineState(Graphics::depthOnlyPSO);
             m_skybox->Render(m_context);
             m_mirror->Render(m_context);
         }
@@ -402,6 +393,10 @@ void UnoEngine::Render() {
         i->Render(m_context);
     }
 
+    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::instancedWirePSO
+                                           : Graphics::instancedSolidPSO);
+    m_physicsSphereInstances.Render(m_context);
+
     EngineBase::SetPipelineState(Graphics::normalsPSO);
     for (auto &i : m_basicList) {
         if (i->m_drawNormals)
@@ -426,6 +421,10 @@ void UnoEngine::Render() {
     for (auto &i : m_basicList) {
         i->Render(m_context);
     }
+
+    EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::reflectInstancedWirePSO
+                                           : Graphics::reflectInstancedSolidPSO);
+    m_physicsSphereInstances.Render(m_context);
 
     EngineBase::SetPipelineState(m_isDrawAsWire ? Graphics::reflectSkyboxWirePSO
                                            : Graphics::reflectSkyboxSolidPSO);

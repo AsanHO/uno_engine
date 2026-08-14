@@ -17,9 +17,9 @@ ComPtr<ID3D11RasterizerState> wireCCWRS;
 ComPtr<ID3D11RasterizerState> postProcessingRS;
 
 // Depth Stencil States
-ComPtr<ID3D11DepthStencilState> drawDSS;       // ÀÏ¹İÀûÀ¸·Î ±×¸®±â
-ComPtr<ID3D11DepthStencilState> maskDSS;       // ½ºÅÙ½Ç¹öÆÛ¿¡ Ç¥½Ã
-ComPtr<ID3D11DepthStencilState> drawMaskedDSS; // ½ºÅÙ½Ç Ç¥½ÃµÈ °÷¸¸
+ComPtr<ID3D11DepthStencilState> drawDSS;       // ì¼ë°˜ì ìœ¼ë¡œ ê·¸ë¦¬ê¸°
+ComPtr<ID3D11DepthStencilState> maskDSS;       // ìŠ¤í…ì‹¤ë²„í¼ì— í‘œì‹œ
+ComPtr<ID3D11DepthStencilState> drawMaskedDSS; // ìŠ¤í…ì‹¤ í‘œì‹œëœ ê³³ë§Œ
 
 // Blend States
 ComPtr<ID3D11BlendState> mirrorBS;
@@ -30,6 +30,8 @@ ComPtr<ID3D11VertexShader> skyboxVS;
 ComPtr<ID3D11VertexShader> samplingVS;
 ComPtr<ID3D11VertexShader> normalVS;
 ComPtr<ID3D11VertexShader> depthOnlyVS;
+ComPtr<ID3D11VertexShader> basicInstancedVS;
+ComPtr<ID3D11VertexShader> depthOnlyInstancedVS;
 
 
 ComPtr<ID3D11PixelShader> basicPS;
@@ -48,6 +50,7 @@ ComPtr<ID3D11InputLayout> basicIL;
 ComPtr<ID3D11InputLayout> samplingIL;
 ComPtr<ID3D11InputLayout> skyboxIL;
 ComPtr<ID3D11InputLayout> postProcessingIL;
+ComPtr<ID3D11InputLayout> basicInstancedIL;
 
 // Graphics Pipeline States
 GraphicsPSO defaultSolidPSO;
@@ -64,6 +67,12 @@ GraphicsPSO reflectSkyboxWirePSO;
 GraphicsPSO normalsPSO;
 GraphicsPSO depthOnlyPSO;
 GraphicsPSO postProcessingPSO;
+
+GraphicsPSO instancedSolidPSO;
+GraphicsPSO instancedWirePSO;
+GraphicsPSO reflectInstancedSolidPSO;
+GraphicsPSO reflectInstancedWirePSO;
+GraphicsPSO depthOnlyInstancedPSO;
 
 } // namespace Graphics
 
@@ -93,7 +102,7 @@ void Graphics::InitSamplers(ComPtr<ID3D11Device> &device) {
     sampDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
     device->CreateSamplerState(&sampDesc, linearClampSS.GetAddressOf());
 
-    // »ùÇÃ·¯ ¼ø¼­°¡ "Common.hlsli"¿¡¼­¿Í ÀÏ°ü¼º ÀÖ¾î¾ß ÇÔ
+    // ìƒ˜í”ŒëŸ¬ ìˆœì„œê°€ "Common.hlsli"ì—ì„œì™€ ì¼ê´€ì„± ìˆì–´ì•¼ í•¨
     sampleStates.push_back(linearWrapSS.Get());
     sampleStates.push_back(linearClampSS.Get());
 }
@@ -110,7 +119,7 @@ void Graphics::InitRasterizerStates(ComPtr<ID3D11Device> &device) {
     rastDesc.MultisampleEnable = true;
     ThrowIfFailed(device->CreateRasterizerState(&rastDesc, solidRS.GetAddressOf()));
 
-    // °Å¿ï¿¡ ¹İ»çµÇ¸é »ï°¢ÇüÀÇ WindingÀÌ ¹Ù²î±â ¶§¹®¿¡ CCW·Î ±×·Á¾ßÇÔ
+    // ê±°ìš¸ì— ë°˜ì‚¬ë˜ë©´ ì‚¼ê°í˜•ì˜ Windingì´ ë°”ë€Œê¸° ë•Œë¬¸ì— CCWë¡œ ê·¸ë ¤ì•¼í•¨
     rastDesc.FrontCounterClockwise = true;
     ThrowIfFailed(device->CreateRasterizerState(&rastDesc, solidCCWRS.GetAddressOf()));
 
@@ -130,15 +139,15 @@ void Graphics::InitRasterizerStates(ComPtr<ID3D11Device> &device) {
 
 void Graphics::InitBlendStates(ComPtr<ID3D11Device> &device) {
 
-    // "ÀÌ¹Ì ±×·ÁÁ®ÀÖ´Â È­¸é"°ú ¾î¶»°Ô ¼¯À»Áö¸¦ °áÁ¤
-    // Dest: ÀÌ¹Ì ±×·ÁÁ® ÀÖ´Â °ªµéÀ» ÀÇ¹Ì
-    // Src: ÇÈ¼¿ ½¦ÀÌ´õ°¡ °è»êÇÑ °ªµéÀ» ÀÇ¹Ì (¿©±â¼­´Â ¸¶Áö¸· °Å¿ï)
+    // "ì´ë¯¸ ê·¸ë ¤ì ¸ìˆëŠ” í™”ë©´"ê³¼ ì–´ë–»ê²Œ ì„ì„ì§€ë¥¼ ê²°ì •
+    // Dest: ì´ë¯¸ ê·¸ë ¤ì ¸ ìˆëŠ” ê°’ë“¤ì„ ì˜ë¯¸
+    // Src: í”½ì…€ ì‰ì´ë”ê°€ ê³„ì‚°í•œ ê°’ë“¤ì„ ì˜ë¯¸ (ì—¬ê¸°ì„œëŠ” ë§ˆì§€ë§‰ ê±°ìš¸)
 
     D3D11_BLEND_DESC mirrorBlendDesc;
     ZeroMemory(&mirrorBlendDesc, sizeof(mirrorBlendDesc));
     mirrorBlendDesc.AlphaToCoverageEnable = true; // MSAA
     mirrorBlendDesc.IndependentBlendEnable = false;
-    // °³º° RenderTarget¿¡ ´ëÇØ¼­ ¼³Á¤ (ÃÖ´ë 8°³)
+    // ê°œë³„ RenderTargetì— ëŒ€í•´ì„œ ì„¤ì • (ìµœëŒ€ 8ê°œ)
     mirrorBlendDesc.RenderTarget[0].BlendEnable = true;
     mirrorBlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_BLEND_FACTOR;
     mirrorBlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_BLEND_FACTOR;
@@ -148,7 +157,7 @@ void Graphics::InitBlendStates(ComPtr<ID3D11Device> &device) {
     mirrorBlendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
     mirrorBlendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
 
-    // ÇÊ¿äÇÏ¸é RGBA °¢°¢¿¡ ´ëÇØ¼­µµ Á¶Àı °¡´É
+    // í•„ìš”í•˜ë©´ RGBA ê°ê°ì— ëŒ€í•´ì„œë„ ì¡°ì ˆ ê°€ëŠ¥
     mirrorBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
     ThrowIfFailed(device->CreateBlendState(&mirrorBlendDesc, mirrorBS.GetAddressOf()));
@@ -156,31 +165,31 @@ void Graphics::InitBlendStates(ComPtr<ID3D11Device> &device) {
 
 void Graphics::InitDepthStencilStates(ComPtr<ID3D11Device> &device) {
 
-    // D3D11_DEPTH_STENCIL_DESC ¿É¼Ç Á¤¸®
+    // D3D11_DEPTH_STENCIL_DESC ì˜µì…˜ ì •ë¦¬
     // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_depth_stencil_desc
-    // StencilRead/WriteMask: ¿¹) uint8 Áß ¾î¶² ºñÆ®¸¦ »ç¿ëÇÒÁö
+    // StencilRead/WriteMask: ì˜ˆ) uint8 ì¤‘ ì–´ë–¤ ë¹„íŠ¸ë¥¼ ì‚¬ìš©í• ì§€
 
-    // D3D11_DEPTH_STENCILOP_DESC ¿É¼Ç Á¤¸®
+    // D3D11_DEPTH_STENCILOP_DESC ì˜µì…˜ ì •ë¦¬
     // https://learn.microsoft.com/en-us/windows/win32/api/d3d11/ns-d3d11-d3d11_depth_stencilop_desc
-    // StencilPassOp : µÑ ´Ù passÀÏ ¶§ ÇÒ ÀÏ
-    // StencilDepthFailOp : Stencil pass, Depth fail ÀÏ ¶§ ÇÒ ÀÏ
-    // StencilFailOp : µÑ ´Ù fail ÀÏ ¶§ ÇÒ ÀÏ
+    // StencilPassOp : ë‘˜ ë‹¤ passì¼ ë•Œ í•  ì¼
+    // StencilDepthFailOp : Stencil pass, Depth fail ì¼ ë•Œ í•  ì¼
+    // StencilFailOp : ë‘˜ ë‹¤ fail ì¼ ë•Œ í•  ì¼
 
-    // m_drawDSS: ±âº» DSS
+    // m_drawDSS: ê¸°ë³¸ DSS
     D3D11_DEPTH_STENCIL_DESC dsDesc;
     ZeroMemory(&dsDesc, sizeof(dsDesc));
     dsDesc.DepthEnable = true;
     dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
     dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    dsDesc.StencilEnable = false; // Stencil ºÒÇÊ¿ä
+    dsDesc.StencilEnable = false; // Stencil ë¶ˆí•„ìš”
     dsDesc.StencilReadMask = D3D11_DEFAULT_STENCIL_READ_MASK;
     dsDesc.StencilWriteMask = D3D11_DEFAULT_STENCIL_WRITE_MASK;
-    // ¾Õ¸é¿¡ ´ëÇØ¼­ ¾î¶»°Ô ÀÛµ¿ÇÒÁö ¼³Á¤
+    // ì•ë©´ì— ëŒ€í•´ì„œ ì–´ë–»ê²Œ ì‘ë™í• ì§€ ì„¤ì •
     dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
-    // µŞ¸é¿¡ ´ëÇØ ¾î¶»°Ô ÀÛµ¿ÇÒÁö ¼³Á¤ (µŞ¸éµµ ±×¸± °æ¿ì)
+    // ë’·ë©´ì— ëŒ€í•´ ì–´ë–»ê²Œ ì‘ë™í• ì§€ ì„¤ì • (ë’·ë©´ë„ ê·¸ë¦´ ê²½ìš°)
     dsDesc.BackFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.BackFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.BackFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
@@ -188,14 +197,14 @@ void Graphics::InitDepthStencilStates(ComPtr<ID3D11Device> &device) {
 
     ThrowIfFailed(device->CreateDepthStencilState(&dsDesc, drawDSS.GetAddressOf()));
 
-    // Stencil¿¡ 1·Î Ç¥±âÇØÁÖ´Â DSS
-    dsDesc.DepthEnable = true; // ÀÌ¹Ì ±×·ÁÁø ¹°Ã¼ À¯Áö
+    // Stencilì— 1ë¡œ í‘œê¸°í•´ì£¼ëŠ” DSS
+    dsDesc.DepthEnable = true; // ì´ë¯¸ ê·¸ë ¤ì§„ ë¬¼ì²´ ìœ ì§€
     dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
     dsDesc.DepthFunc = D3D11_COMPARISON_LESS;
-    dsDesc.StencilEnable = true;    // Stencil ÇÊ¼ö
-    dsDesc.StencilReadMask = 0xFF;  // ¸ğµç ºñÆ® ´Ù »ç¿ë
-    dsDesc.StencilWriteMask = 0xFF; // ¸ğµç ºñÆ® ´Ù »ç¿ë
-    // ¾Õ¸é¿¡ ´ëÇØ¼­ ¾î¶»°Ô ÀÛµ¿ÇÒÁö ¼³Á¤
+    dsDesc.StencilEnable = true;    // Stencil í•„ìˆ˜
+    dsDesc.StencilReadMask = 0xFF;  // ëª¨ë“  ë¹„íŠ¸ ë‹¤ ì‚¬ìš©
+    dsDesc.StencilWriteMask = 0xFF; // ëª¨ë“  ë¹„íŠ¸ ë‹¤ ì‚¬ìš©
+    // ì•ë©´ì— ëŒ€í•´ì„œ ì–´ë–»ê²Œ ì‘ë™í• ì§€ ì„¤ì •
     dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
@@ -203,14 +212,14 @@ void Graphics::InitDepthStencilStates(ComPtr<ID3D11Device> &device) {
 
     ThrowIfFailed(device->CreateDepthStencilState(&dsDesc, maskDSS.GetAddressOf()));
 
-    // Stencil¿¡ 1·Î Ç¥±âµÈ °æ¿ì¿¡"¸¸" ±×¸®´Â DSS
-    // DepthBuffer´Â ÃÊ±âÈ­µÈ »óÅÂ·Î °¡Á¤
-    // D3D11_COMPARISON_EQUAL ÀÌ¹Ì 1·Î Ç¥±âµÈ °æ¿ì¿¡¸¸ ±×¸®±â
-    // OMSetDepthStencilState(..., 1); <- ¿©±âÀÇ 1
-    dsDesc.DepthEnable = true;   // °Å¿ï ¼ÓÀ» ´Ù½Ã ±×¸±¶§ ÇÊ¿ä
-    dsDesc.StencilEnable = true; // Stencil »ç¿ë
+    // Stencilì— 1ë¡œ í‘œê¸°ëœ ê²½ìš°ì—"ë§Œ" ê·¸ë¦¬ëŠ” DSS
+    // DepthBufferëŠ” ì´ˆê¸°í™”ëœ ìƒíƒœë¡œ ê°€ì •
+    // D3D11_COMPARISON_EQUAL ì´ë¯¸ 1ë¡œ í‘œê¸°ëœ ê²½ìš°ì—ë§Œ ê·¸ë¦¬ê¸°
+    // OMSetDepthStencilState(..., 1); <- ì—¬ê¸°ì˜ 1
+    dsDesc.DepthEnable = true;   // ê±°ìš¸ ì†ì„ ë‹¤ì‹œ ê·¸ë¦´ë•Œ í•„ìš”
+    dsDesc.StencilEnable = true; // Stencil ì‚¬ìš©
     dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-    dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL; // <- ÁÖÀÇ
+    dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL; // <- ì£¼ì˜
     dsDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
     dsDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
@@ -243,6 +252,18 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
         {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
     };
 
+    // ì •ì (slot 0, basicIEsì™€ ë™ì¼) + ì¸ìŠ¤í„´ìŠ¤ë³„ world í–‰ë ¬ 4í–‰(slot 1, WORLD0~3)
+    vector<D3D11_INPUT_ELEMENT_DESC> basicInstancedIEs = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D11_INPUT_PER_VERTEX_DATA, 0},
+        {"WORLD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 0, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"WORLD", 1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 16, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"WORLD", 2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 32, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+        {"WORLD", 3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, 48, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+    };
+
     D3D11Utils::CreateVertexShaderAndInputLayout(device, L"BasicVS.hlsl", basicIEs, basicVS,
                                                  basicIL);
 
@@ -257,6 +278,12 @@ void Graphics::InitShaders(ComPtr<ID3D11Device> &device) {
     D3D11Utils::CreateVertexShaderAndInputLayout(device, L"DepthOnlyVS.hlsl", basicIEs, depthOnlyVS,
                                                  skyboxIL);
 
+    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"BasicInstancedVS.hlsl",
+                                                 basicInstancedIEs, basicInstancedVS,
+                                                 basicInstancedIL);
+    D3D11Utils::CreateVertexShaderAndInputLayout(device, L"DepthOnlyInstancedVS.hlsl",
+                                                 basicInstancedIEs, depthOnlyInstancedVS,
+                                                 basicInstancedIL);
 
     D3D11Utils::CreatePixelShader(device, L"BasicPS.hlsl", basicPS);
     D3D11Utils::CreatePixelShader(device, L"NormalPS.hlsl", normalPS);
@@ -289,15 +316,15 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     stencilMaskPSO.m_stencilRef = 1;
     stencilMaskPSO.m_pixelShader = simplePS;
 
-    // reflectSolidPSO: ¹İ»çµÇ¸é Winding ¹İ´ë
+    // reflectSolidPSO: ë°˜ì‚¬ë˜ë©´ Winding ë°˜ëŒ€
     reflectSolidPSO = defaultSolidPSO;
     reflectSolidPSO.m_depthStencilState = drawMaskedDSS;
-    reflectSolidPSO.m_rasterizerState = solidCCWRS; // ¹İ½Ã°è
+    reflectSolidPSO.m_rasterizerState = solidCCWRS; // ë°˜ì‹œê³„
     reflectSolidPSO.m_stencilRef = 1;
 
-    // reflectWirePSO: ¹İ»çµÇ¸é Winding ¹İ´ë
+    // reflectWirePSO: ë°˜ì‚¬ë˜ë©´ Winding ë°˜ëŒ€
     reflectWirePSO = reflectSolidPSO;
-    reflectWirePSO.m_rasterizerState = wireCCWRS; // ¹İ½Ã°è
+    reflectWirePSO.m_rasterizerState = wireCCWRS; // ë°˜ì‹œê³„
     reflectWirePSO.m_stencilRef = 1;
 
     // mirrorBlendSolidPSO;
@@ -325,7 +352,7 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     // reflectSkyboxSolidPSO
     reflectSkyboxSolidPSO = skyboxSolidPSO;
     reflectSkyboxSolidPSO.m_depthStencilState = drawMaskedDSS;
-    reflectSkyboxSolidPSO.m_rasterizerState = solidCCWRS; // ¹İ½Ã°è
+    reflectSkyboxSolidPSO.m_rasterizerState = solidCCWRS; // ë°˜ì‹œê³„
     reflectSkyboxSolidPSO.m_stencilRef = 1;
 
     // reflectSkyboxWirePSO
@@ -345,6 +372,30 @@ void Graphics::InitPipelineStates(ComPtr<ID3D11Device> &device) {
     depthOnlyPSO.m_vertexShader = depthOnlyVS;
     depthOnlyPSO.m_pixelShader = depthOnlyPS;
 
+    // instancedSolidPSO: ë¬¼ë¦¬ êµ¬ 10ê°œë¥¼ í•œ ë²ˆì— ê·¸ë¦¬ëŠ” DrawIndexedInstancedìš©
+    instancedSolidPSO = defaultSolidPSO;
+    instancedSolidPSO.m_vertexShader = basicInstancedVS;
+    instancedSolidPSO.m_inputLayout = basicInstancedIL;
+
+    // instancedWirePSO
+    instancedWirePSO = instancedSolidPSO;
+    instancedWirePSO.m_rasterizerState = wireRS;
+
+    // reflectInstancedSolidPSO: ë°˜ì‚¬ë©´ Winding ë°˜ëŒ€
+    reflectInstancedSolidPSO = instancedSolidPSO;
+    reflectInstancedSolidPSO.m_depthStencilState = drawMaskedDSS;
+    reflectInstancedSolidPSO.m_rasterizerState = solidCCWRS;
+    reflectInstancedSolidPSO.m_stencilRef = 1;
+
+    // reflectInstancedWirePSO
+    reflectInstancedWirePSO = reflectInstancedSolidPSO;
+    reflectInstancedWirePSO.m_rasterizerState = wireCCWRS;
+    reflectInstancedWirePSO.m_stencilRef = 1;
+
+    // depthOnlyInstancedPSO
+    depthOnlyInstancedPSO = instancedSolidPSO;
+    depthOnlyInstancedPSO.m_vertexShader = depthOnlyInstancedVS;
+    depthOnlyInstancedPSO.m_pixelShader = depthOnlyPS;
 
     // postProcessingPSO
     postProcessingPSO.m_vertexShader = samplingVS;

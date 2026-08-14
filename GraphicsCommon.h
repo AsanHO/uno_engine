@@ -5,7 +5,7 @@
 
 namespace hlab {
 
-// Âü°í: DirectX_Graphic-Samples ¹Ì´Ï¿£Áø
+// ì°¸ê³ : DirectX_Graphic-Samples ë¯¸ë‹ˆì—”ì§„
 // https://github.com/microsoft/DirectX-Graphics-Samples/blob/master/MiniEngine/Core/GraphicsCommon.h
 
 namespace Graphics {
@@ -23,9 +23,9 @@ extern ComPtr<ID3D11RasterizerState> wireCCWRS;
 extern ComPtr<ID3D11RasterizerState> postProcessingRS;
 
 // Depth Stencil States
-extern ComPtr<ID3D11DepthStencilState> drawDSS;       // ÀÏ¹İÀûÀ¸·Î ±×¸®±â
-extern ComPtr<ID3D11DepthStencilState> maskDSS;       // ½ºÅÙ½Ç¹öÆÛ¿¡ Ç¥½Ã
-extern ComPtr<ID3D11DepthStencilState> drawMaskedDSS; // ½ºÅÙ½Ç Ç¥½ÃµÈ °÷¸¸
+extern ComPtr<ID3D11DepthStencilState> drawDSS;       // ì¼ë°˜ì ìœ¼ë¡œ ê·¸ë¦¬ê¸°
+extern ComPtr<ID3D11DepthStencilState> maskDSS;       // ìŠ¤í…ì‹¤ë²„í¼ì— í‘œì‹œ
+extern ComPtr<ID3D11DepthStencilState> drawMaskedDSS; // ìŠ¤í…ì‹¤ í‘œì‹œëœ ê³³ë§Œ
 
 // Shaders
 extern ComPtr<ID3D11VertexShader> basicVS;
@@ -33,6 +33,8 @@ extern ComPtr<ID3D11VertexShader> skyboxVS;
 extern ComPtr<ID3D11VertexShader> samplingVS;
 extern ComPtr<ID3D11VertexShader> normalVS;
 extern ComPtr<ID3D11VertexShader> depthOnlyVS;
+extern ComPtr<ID3D11VertexShader> basicInstancedVS;
+extern ComPtr<ID3D11VertexShader> depthOnlyInstancedVS;
 extern ComPtr<ID3D11PixelShader> basicPS;
 extern ComPtr<ID3D11PixelShader> skyboxPS;
 extern ComPtr<ID3D11PixelShader> combinePS;
@@ -48,6 +50,7 @@ extern ComPtr<ID3D11InputLayout> basicIL;
 extern ComPtr<ID3D11InputLayout> samplingIL;
 extern ComPtr<ID3D11InputLayout> skyboxIL;
 extern ComPtr<ID3D11InputLayout> postProcessingIL;
+extern ComPtr<ID3D11InputLayout> basicInstancedIL; // ì •ì (slot 0) + ì¸ìŠ¤í„´ìŠ¤ë³„ world(slot 1)
 
 // Blend States
 extern ComPtr<ID3D11BlendState> mirrorBS;
@@ -68,9 +71,16 @@ extern GraphicsPSO normalsPSO;
 extern GraphicsPSO depthOnlyPSO;
 extern GraphicsPSO postProcessingPSO;
 
+// ë¬¼ë¦¬ êµ¬ GPU ì¸ìŠ¤í„´ì‹±ìš© (InstancedSpheres)
+extern GraphicsPSO instancedSolidPSO;
+extern GraphicsPSO instancedWirePSO;
+extern GraphicsPSO reflectInstancedSolidPSO;
+extern GraphicsPSO reflectInstancedWirePSO;
+extern GraphicsPSO depthOnlyInstancedPSO;
+
 void InitCommonStates(ComPtr<ID3D11Device> &device);
 
-// ³»ºÎÀûÀ¸·Î InitCommonStates()¿¡¼­ »ç¿ë
+// ë‚´ë¶€ì ìœ¼ë¡œ InitCommonStates()ì—ì„œ ì‚¬ìš©
 void InitSamplers(ComPtr<ID3D11Device> &device);
 void InitRasterizerStates(ComPtr<ID3D11Device> &device);
 void InitBlendStates(ComPtr<ID3D11Device> &device);
