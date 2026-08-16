@@ -54,7 +54,7 @@ bool UnoEngine::Initialize() {
 
     // Main Sphere
     {
-        Vector3 center(0.0f, 0.5f, 1.0f);
+        Vector3 center(0.0f, 0.5f,3.0f);
         float radius = 0.4f;
         MeshData sphere = GeometryGenerator::MakeSphere(radius, 100, 100, {1.0f, 1.0f});
 
@@ -84,20 +84,20 @@ bool UnoEngine::Initialize() {
 
         m_basicList.push_back(m_mainSphere);
     }
-    // 추가 물체1
-    {
-        MeshData mesh = GeometryGenerator::MakeSphere(0.2f, 200, 200);
-        Vector3 center(0.5f, 0.5f, 2.0f);
-        auto m_obj = make_shared<Model>(m_device, m_context, vector{mesh});
-        m_obj->UpdateWorldRow(Matrix::CreateTranslation(center));
-        m_obj->m_materialConstsCPU.albedoFactor = Vector3(0.1f, 0.1f, 1.0f);
-        m_obj->m_materialConstsCPU.roughnessFactor = 0.2f;
-        m_obj->m_materialConstsCPU.metallicFactor = 0.6f;
-        m_obj->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
-        m_obj->UpdateConstantBuffers(m_device, m_context);
+    //// 추가 물체1
+    //{
+    //    MeshData mesh = GeometryGenerator::MakeSphere(0.2f, 200, 200);
+    //    Vector3 center(0.5f, 0.5f, 2.0f);
+    //    auto m_obj = make_shared<Model>(m_device, m_context, vector{mesh});
+    //    m_obj->UpdateWorldRow(Matrix::CreateTranslation(center));
+    //    m_obj->m_materialConstsCPU.albedoFactor = Vector3(0.1f, 0.1f, 1.0f);
+    //    m_obj->m_materialConstsCPU.roughnessFactor = 0.2f;
+    //    m_obj->m_materialConstsCPU.metallicFactor = 0.6f;
+    //    m_obj->m_materialConstsCPU.emissionFactor = Vector3(0.0f);
+    //    m_obj->UpdateConstantBuffers(m_device, m_context);
 
-        m_basicList.push_back(m_obj);
-    }
+    //    m_basicList.push_back(m_obj);
+    //}
 
     // 물리 데모 (2단계: 구 여러 개, 중력 + 바닥 충돌 + 구-구 충돌)
     // 렌더링은 GPU 인스턴싱 1개 드로우콜로, mainSphere와 동일한 돌 PBR 재질을 공유한다
@@ -471,6 +471,18 @@ void UnoEngine::UpdateGUI() {
         ImGui::Checkbox("Wireframe", &m_isDrawAsWire);
         if (ImGui::Checkbox("MSAA ON", &m_useMSAA)) {
             CreateBuffers();
+        }
+        ImGui::TreePop();
+    }
+
+    ImGui::SetNextItemOpen(true, ImGuiCond_Once);
+    if (ImGui::TreeNode("Physics Demo")) {
+        // 촬영용: 물리 구 10개를 반지름의 5배 높이만큼 위로 텔레포트시켜서 다시 떨어뜨림
+        if (ImGui::Button("Teleport Spheres Up")) {
+            for (int i = 0; i < NUM_PHYSICS_SPHERES; i++) {
+                m_physicsBodies[i].position.y += m_physicsBodies[i].radius * 5.0f;
+                m_physicsBodies[i].velocity = Vector3(0.0f);
+            }
         }
         ImGui::TreePop();
     }
