@@ -26,37 +26,72 @@ DirectX11 기반 실시간 렌더링 엔진. PBR 머티리얼, IBL, 실시간 �
 ## 엔진 구조
 
 ```mermaid
-flowchart LR
-    subgraph Core["EngineBase — 엔진 코어"]
-        Win32["Win32 윈도우 · Raw Input"]
-        D3D["D3D11 디바이스 · 스왑체인"]
+flowchart TB
+    Main["main.cpp"] --> EB
+
+    subgraph EBBox["EngineBase — 엔진 코어"]
+        EB["EngineBase\nWin32 창 · Raw Input · D3D11 디바이스/스왑체인"]
         Cam["Camera"]
         Gui["ImGui"]
-        Pso["GraphicsPSO 관리"]
+        PP["PostProcess"]
+        IF["ImageFilter\nBloom Down/Up · Combine"]
+        GPSO["GraphicsPSO\n(PSO 구조체)"]
+        CBuf["ConstantBuffers\nGlobalConstants · Light · MeshConstants · MaterialConstants"]
     end
+    EB --> Cam
+    EB --> Gui
+    EB --> PP --> IF
+    EB --> CBuf
 
-    subgraph Scene["UnoEngine — 씬 로직"]
-        Models["Model\nmainSphere · mirror · ground · skybox"]
-        Phys["PhysicsBody × 10\n중력 · 충돌 · 마찰 · 구름"]
-        Inst["InstancedSpheres\n공유 메시 + 인스턴스 버퍼"]
+    EB -->|상속| UE
+
+    subgraph UEBox["UnoEngine — 씬 로직 · Update/Render"]
+        UE["UnoEngine"]
+        Mdl["Model\nmainSphere · mirror · ground · skybox · lightSphere[]"]
+        PB["PhysicsBody × 10\n중력 · 충돌 · 마찰 · 구름"]
+        Inst["InstancedSpheres"]
     end
+    UE --> Mdl
+    UE --> PB
+    UE --> Inst
+    PB -->|world 행렬 갱신| Inst
 
-    subgraph Pass["렌더 패스 (매 프레임)"]
-        Depth["Depth Prepass"]
-        Shadow["Shadow Pass (조명별)"]
-        Color["Main Color Pass"]
-        Mirror["Mirror Reflection Pass"]
+    subgraph MeshBox["메시 데이터 계층"]
+        Mesh["Mesh\nGPU 버퍼(VB/IB) · SRV"]
+        MD["MeshData\n정점/인덱스 + 텍스처 경로"]
+        Vtx["Vertex"]
+        GG["GeometryGenerator\nMakeSphere/Box/Cylinder..."]
+        ML["ModelLoader\nAssimp (fbx/gltf)"]
     end
+    Mdl --> Mesh --> MD --> Vtx
+    Inst --> Mesh
+    UE -.->|프로시저럴 메시 생성| GG
+    Mdl -.->|파일 로드 생성자| GG
+    GG --> ML
 
-    Win32 --> D3D
-    Cam --> Color
-    Phys -->|world 행렬 갱신| Inst
-    Models --> Depth & Shadow & Color & Mirror
-    Inst --> Depth & Shadow & Color & Mirror
-    D3D --> Pass
+    subgraph GfxBox["GraphicsCommon — 전역 셰이더 / PSO 저장소"]
+        GC["Graphics 네임스페이스\nbasicVS/PS · basicInstancedVS · depthOnlyVS · skyboxVS/PS ...\ndefaultSolidPSO · reflectSolidPSO · instancedSolidPSO ..."]
+    end
+    GPSO -.-> GC
+    UE -->|SetPipelineState| GC
+
+    D3U["D3D11Utils\n버퍼/텍스처/셰이더 생성 유틸"]
+    Mesh -.-> D3U
+    GC -.-> D3U
+
+    subgraph Legacy["레거시 — 현재 빌드에서 제외됨"]
+        direction TB
+        L1["BasicMeshGroup"]
+        L2["BasicConstantData"]
+        L3["Light.h (구버전)"]
+        L4["CubeMapping"]
+        L5["Material.h"]
+    end
 ```
 
-`EngineBase`가 창 생성, 디바이스/스왑체인 초기화, 카메라, ImGui, 파이프라인 스테이트(PSO) 같은 공통 기반을 담당하고, `UnoEngine`이 이를 상속받아 실제 씬(오브젝트, 조명, 물리, 인터랙션)과 4단계 렌더 패스를 구현하는 구조입니다.
+`EngineBase`가 창 생성, 디바이스/스왑체인 초기화, 카메라, ImGui, 포스트프로세싱, 공용 상수버퍼 같은 공통 기반을 담당하고, `UnoEngine`이 이를 상속받아 실제 씬(오브젝트, 조명, 물리, 인터랙션)과 4단계 렌더 패스를 구현합니다. `Model`은 절차적으로 생성한 메시(`GeometryGenerator::MakeSphere` 등)와 파일에서 읽어들인 메시(`ModelLoader` → Assimp)를 동일한 `Mesh`/GPU 버퍼 형태로 감싸서 다루고, 실제로 어떤 셰이더·파이프라인 상태로 그릴지는 `UnoEngine::Render()`가 `GraphicsCommon`에 미리 준비된 PSO를 골라 `SetPipelineState()`로 바꿔가며 결정합니다.
+
+`BasicMeshGroup` / `BasicConstantData` / 구버전 `Light.h` / `CubeMapping` / `Material.h`는 강의 초반 예제(ExampleApp) 시절 코드로, 이후 `Model` + `ConstantBuffers`(`MeshConstants`/`MaterialConstants`) 조합으로 완전히 대체되면서 현재 `.vcxproj` 빌드 목록에서 빠져 있습니다(`Light.h`만 프로젝트에 남아있지만 실제로 참조하는 곳은 없습니다).
 
 ## GPU 하드웨어 인스턴싱 — Draw Call 10 → 1
 
